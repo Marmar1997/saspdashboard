@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SASP — Financial Product Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="onboarding.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans:    ['"Inter"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          heading: ['"Space Grotesk"', '"Inter"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          mono:    ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        },
+        colors: {
+          ink:   { 900:'#0a1628', 800:'#1f2d44', 700:'#1f2d44', 500:'#4a5878', 400:'#6b7a8e', 300:'#b6bfd0', 200:'#cdd5e2', 100:'#eff2f7' },
+          paper: { 0:'#FFFFFF', 50:'#FAFBFC', 100:'#EFF2F7', 200:'#DDE3EC' },
+          green: { 950:'#06251A', 900:'#093A28', 800:'#0E5238', 700:'#147049', 600:'#188A56', 500:'#1FA968', 400:'#4FC289', 300:'#8AD7B0', 200:'#BEEAD0', 100:'#E2F4E9', 50:'#F1FAF4' },
+          amber: { 700:'#A6660A', 500:'#D8910F', 300:'#F0C155', 100:'#FBEFD2' },
+          brand:            '#B6E94D',
+          'brand-emphasis': '#9FD234',
+          'brand-surface':  '#F1FAD7',
+          'brand-accent':   '#1FA968',
+          'brand-on':       '#081A2E',
+          navy:  { 950:'#00141F', 900:'#081A2E', 800:'#0E2A47', 700:'#142238', 600:'#1F2D44', 500:'#34496A' },
+        },
+        boxShadow: {
+          card:  '0 1px 0 rgba(8,26,46,0.05), 0 1px 2px rgba(8,26,46,0.05)',
+          lift:  '0 1px 0 rgba(8,26,46,0.05), 0 12px 32px -16px rgba(8,26,46,0.18)',
+          inset: 'inset 0 0 0 1px rgba(8,26,46,0.08)',
+        },
+      },
+    },
+  };
+</script>
+<style>
+  :root {
+    --color-primary:        #0E2A47;
+    --color-secondary:      #081A2E;
+    --color-accent:         #B6E94D;
+    --color-bg:             #FFFFFF;
+    --color-surface:        #FFFFFF;
+    --color-surface-muted:  #EFF2F7;
+    --color-bg-deep:        #00141F;
+    --color-text:           #0A1628;
+    --color-text-heading:   #081A2E;
+    --color-text-body:      #1F2D44;
+    --color-text-muted:     #4A5878;
+    --color-text-subtle:    #B6BFD0;
+    --color-text-inverse:   #FAFBFC;
+    --color-text-inverse-muted:  rgba(250,251,252,0.85);
+    --color-text-inverse-dim:    rgba(250,251,252,0.70);
+    --color-text-inverse-subtle: rgba(250,251,252,0.55);
+    --color-border-dark:    rgba(250,251,252,0.20);
+    --color-border-dark-lg: rgba(250,251,252,0.30);
+    --color-border-dark-sm: rgba(250,251,252,0.10);
+    --color-accent-80: rgba(182,233,77,0.80);
+    --color-accent-60: rgba(182,233,77,0.60);
+    --color-accent-45: rgba(182,233,77,0.45);
+    --color-accent-40: rgba(182,233,77,0.40);
+    --color-accent-30: rgba(182,233,77,0.30);
+    --color-accent-15: rgba(182,233,77,0.15);
+    --font-heading: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    --font-body:    "Inter", ui-sans-serif, system-ui, sans-serif;
+    --letter-spacing-h1: -1.8px;
+    --letter-spacing-h2: -1.2px;
+    --letter-spacing-h3: -0.9px;
+    --letter-spacing-h4: -0.5px;
+    --letter-spacing-h5: -0.45px;
+    --letter-spacing-label: 1.68px;
+    --letter-spacing-badge: 1.54px;
+  }
+  html, body { background: var(--color-bg); color: var(--color-text); }
+  body { font-family: var(--font-body); font-feature-settings: "ss01","cv11"; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); color: var(--color-text-heading); letter-spacing: -0.01em; }
+  .num { font-feature-settings: "tnum","cv11"; font-variant-numeric: tabular-nums; }
+  .hairline { box-shadow: inset 0 0 0 1px rgba(8,26,46,0.10); }
+  .hairline-b { box-shadow: 0 1px 0 rgba(8,26,46,0.10); }
+  .grid-bg {
+    background-image:
+      linear-gradient(to right, rgba(8,26,46,0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(8,26,46,0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .ticker-fade {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+            mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  }
+  .scroll-hidden::-webkit-scrollbar { display: none; }
+  .scroll-hidden { scrollbar-width: none; }
+
+  /* Dial */
+  .dial-shell {
+    background: radial-gradient(120% 120% at 30% 20%, #FFFFFF 0%, #EFF2F7 60%, #DDE3EC 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.9),
+      inset 0 -2px 6px rgba(8,26,46,0.06),
+      0 1px 0 rgba(8,26,46,0.04),
+      0 18px 40px -20px rgba(8,26,46,0.20);
+  }
+  .dial-knob {
+    background: radial-gradient(120% 120% at 30% 25%, #FFFFFF 0%, #FAFBFC 55%, #DDE3EC 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.95),
+      inset 0 -3px 6px rgba(8,26,46,0.08),
+      0 12px 24px -12px rgba(8,26,46,0.22);
+  }
+
+  /* Mood gradient — animated */
+  @keyframes drift {
+    0%   { transform: translate(0,0) scale(1); }
+    50%  { transform: translate(2%,-2%) scale(1.04); }
+    100% { transform: translate(0,0) scale(1); }
+  }
+  .mood-blob { animation: drift 8s ease-in-out infinite; }
+
+  @keyframes pulse-ring {
+    0%   { transform: scale(0.96); opacity: .9; }
+    50%  { transform: scale(1.04); opacity: .35; }
+    100% { transform: scale(0.96); opacity: .9; }
+  }
+  .pulse-ring { animation: pulse-ring 2.4s ease-in-out infinite; }
+
+  /* subtle stripe placeholder */
+  .stripe-placeholder {
+    background:
+      repeating-linear-gradient(135deg, rgba(8,26,46,0.06) 0 1px, transparent 1px 10px),
+      #EFF2F7;
+  }
+
+  /* Tooltip arrow */
+  .tip::after { content:''; position:absolute; left:50%; bottom:-4px; transform:translateX(-50%) rotate(45deg); width:8px; height:8px; background:inherit; }
+
+  /* Drawer slide */
+  .drawer { transition: grid-template-rows .35s ease, opacity .25s ease; display:grid; grid-template-rows: 0fr; opacity: 0; }
+  .drawer > div { overflow: hidden; }
+  .drawer.open { grid-template-rows: 1fr; opacity: 1; }
+
+  /* Range track */
+  input[type=range].sasp { -webkit-appearance:none; appearance:none; height:4px; background: transparent; }
+  input[type=range].sasp::-webkit-slider-runnable-track { height: 4px; background:#DDE3EC; border-radius: 999px; }
+  input[type=range].sasp::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:999px; background:#081A2E; border:3px solid #fff; box-shadow:0 1px 6px rgba(8,26,46,0.25); margin-top:-7px; cursor:grab; }
+  input[type=range].sasp::-moz-range-track { height: 4px; background:#DDE3EC; border-radius: 999px; }
+  input[type=range].sasp::-moz-range-thumb { width:14px; height:14px; border-radius:999px; background:#081A2E; border:3px solid #fff; box-shadow:0 1px 6px rgba(8,26,46,0.25); cursor:grab; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="shell.jsx"></script>
+<script type="text/babel" src="portfolio.jsx"></script>
+<script type="text/babel" src="audiences.jsx"></script>
+<script type="text/babel" src="simulator.jsx"></script>
+<script type="text/babel" src="sources.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+
+<script src="onboarding.js" defer></script>
+</body>
+</html>

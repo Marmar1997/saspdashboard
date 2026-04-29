@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SASP — Demo tour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="tour.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['"Inter Tight"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        },
+        colors: {
+          ink:   { 900:'#0B1410', 800:'#142019', 700:'#1F2C24', 500:'#4B5A52', 400:'#6B7A71', 300:'#9DA9A1', 200:'#C9D1CB', 100:'#E6EAE6' },
+          paper: { 0:'#FFFFFF', 50:'#F7F8F6', 100:'#EFF1ED', 200:'#E3E7E1' },
+          green: { 950:'#06251A', 900:'#093A28', 800:'#0E5238', 700:'#147049', 600:'#188A56', 500:'#1FA968', 400:'#4FC289', 300:'#8AD7B0', 200:'#BEEAD0', 100:'#E2F4E9', 50:'#F1FAF4' },
+          amber: { 700:'#A6660A', 500:'#D8910F', 300:'#F0C155', 100:'#FBEFD2' },
+        },
+        boxShadow: {
+          card:  '0 1px 0 rgba(11,20,16,0.04), 0 1px 2px rgba(11,20,16,0.04)',
+          lift:  '0 1px 0 rgba(11,20,16,0.04), 0 12px 32px -16px rgba(11,20,16,0.18)',
+          inset: 'inset 0 0 0 1px rgba(11,20,16,0.06)',
+        },
+      },
+    },
+  };
+</script>
+<style>
+  html, body { background: #F7F8F6; color: #0B1410; }
+  body { font-family: 'Inter Tight', ui-sans-serif, system-ui, sans-serif; font-feature-settings: "ss01","cv11"; -webkit-font-smoothing: antialiased; }
+  .num { font-feature-settings: "tnum","cv11"; font-variant-numeric: tabular-nums; }
+  .hairline { box-shadow: inset 0 0 0 1px rgba(11,20,16,0.08); }
+  .hairline-b { box-shadow: 0 1px 0 rgba(11,20,16,0.08); }
+  .grid-bg {
+    background-image:
+      linear-gradient(to right, rgba(11,20,16,0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(11,20,16,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .ticker-fade {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+            mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  }
+  .scroll-hidden::-webkit-scrollbar { display: none; }
+  .scroll-hidden { scrollbar-width: none; }
+
+  .dial-shell {
+    background: radial-gradient(120% 120% at 30% 20%, #FFFFFF 0%, #EFF1ED 60%, #E3E7E1 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.9),
+      inset 0 -2px 6px rgba(11,20,16,0.06),
+      0 1px 0 rgba(11,20,16,0.04),
+      0 18px 40px -20px rgba(11,20,16,0.25);
+  }
+  .dial-knob {
+    background: radial-gradient(120% 120% at 30% 25%, #FFFFFF 0%, #F7F8F6 55%, #DDE2DC 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.95),
+      inset 0 -3px 6px rgba(11,20,16,0.08),
+      0 12px 24px -12px rgba(11,20,16,0.25);
+  }
+
+  @keyframes drift {
+    0%   { transform: translate(0,0) scale(1); }
+    50%  { transform: translate(2%,-2%) scale(1.04); }
+    100% { transform: translate(0,0) scale(1); }
+  }
+  .mood-blob { animation: drift 8s ease-in-out infinite; }
+
+  @keyframes pulse-ring {
+    0%   { transform: scale(0.96); opacity: .9; }
+    50%  { transform: scale(1.04); opacity: .35; }
+    100% { transform: scale(0.96); opacity: .9; }
+  }
+  .pulse-ring { animation: pulse-ring 2.4s ease-in-out infinite; }
+
+  .stripe-placeholder {
+    background:
+      repeating-linear-gradient(135deg, rgba(11,20,16,0.05) 0 1px, transparent 1px 10px),
+      #EFF1ED;
+  }
+
+  @keyframes wobble {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-1px); }
+  }
+
+  .tip::after { content:''; position:absolute; left:50%; bottom:-4px; transform:translateX(-50%) rotate(45deg); width:8px; height:8px; background:inherit; }
+
+  .drawer { transition: grid-template-rows .35s ease, opacity .25s ease; display:grid; grid-template-rows: 0fr; opacity: 0; }
+  .drawer > div { overflow: hidden; }
+  .drawer.open { grid-template-rows: 1fr; opacity: 1; }
+
+  .ring-green { box-shadow: 0 0 0 2px #1FA968, 0 12px 32px -16px rgba(11,20,16,0.18); }
+
+  input[type=range].sasp { -webkit-appearance:none; appearance:none; height:4px; background: transparent; }
+  input[type=range].sasp::-webkit-slider-runnable-track { height: 4px; background:#E3E7E1; border-radius: 999px; }
+  input[type=range].sasp::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:999px; background:#147049; border:3px solid #fff; box-shadow:0 1px 6px rgba(11,20,16,0.25); margin-top:-7px; cursor:grab; }
+  input[type=range].sasp::-moz-range-track { height: 4px; background:#E3E7E1; border-radius: 999px; }
+  input[type=range].sasp::-moz-range-thumb { width:14px; height:14px; border-radius:999px; background:#147049; border:3px solid #fff; box-shadow:0 1px 6px rgba(11,20,16,0.25); cursor:grab; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- React + Babel (same as main app for visual parity) -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- Same screens as main app — gives the tour a real-looking backdrop -->
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="shell.jsx"></script>
+<script type="text/babel" src="portfolio.jsx"></script>
+<script type="text/babel" src="audiences.jsx"></script>
+<script type="text/babel" src="simulator.jsx"></script>
+<script type="text/babel" src="sources.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+
+<!-- Tour layer (loads after React mounts; engine waits for nav buttons) -->
+<script src="tour-script.js" defer></script>
+<script src="tour-engine.js" defer></script>
+</body>
+</html>
