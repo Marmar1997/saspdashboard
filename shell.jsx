@@ -9,28 +9,30 @@ function SideRail({ screen, setScreen }) {
     { id:'simulator', label:'Simulator', Icon: window.Icons.Simulator },
   ];
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-[72px] bg-paper-0 border-r border-ink-100/80 flex flex-col items-center pb-5 z-30">
+    <aside className="fixed left-0 top-0 bottom-0 w-[72px] bg-paper-0 flex flex-col items-center z-30">
       <div className="h-[60px] w-full grid place-items-center border-b border-ink-100/80 shrink-0">
         <div className="w-10 h-10 rounded-xl bg-navy-900 text-paper-0 grid place-items-center">
           <window.Icons.Logo size={20} />
         </div>
       </div>
-      <nav className="flex flex-col gap-1 items-center mt-5">
-        {items.map(({id,label,Icon}) => {
-          const active = screen === id;
-          return (
-            <button key={id} onClick={()=>setScreen(id)}
-              className={`group relative w-12 h-12 rounded-xl grid place-items-center transition
-                ${active ? 'bg-brand-surface text-navy-900' : 'text-ink-500 hover:text-ink-900 hover:bg-paper-100'}`}>
-              <Icon size={20} stroke={active?1.8:1.6}/>
-              <span className="absolute left-full ml-3 px-2 py-1 rounded-md bg-ink-900 text-paper-0 text-[11px] font-medium opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">{label}</span>
-              {active && <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-brand"/>}
-            </button>
-          );
-        })}
-      </nav>
-      <div className="mt-auto flex flex-col items-center gap-2 text-ink-400">
-        <div className="w-9 h-9 rounded-full bg-paper-100 grid place-items-center text-[11px] font-semibold text-ink-700">FT</div>
+      <div className="w-full flex-1 flex flex-col items-center border-r border-ink-100/80 py-5">
+        <nav className="flex flex-col gap-1 items-center">
+          {items.map(({id,label,Icon}) => {
+            const active = screen === id;
+            return (
+              <button key={id} onClick={()=>setScreen(id)}
+                className={`group relative w-12 h-12 rounded-xl grid place-items-center transition
+                  ${active ? 'bg-brand-surface text-navy-900' : 'text-ink-500 hover:text-ink-900 hover:bg-paper-100'}`}>
+                <Icon size={20} stroke={active?1.8:1.6}/>
+                <span className="absolute left-full ml-3 px-2 py-1 rounded-md bg-ink-900 text-paper-0 text-[11px] font-medium opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">{label}</span>
+                {active && <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-brand"/>}
+              </button>
+            );
+          })}
+        </nav>
+        <div className="mt-auto flex flex-col items-center gap-2 text-ink-400">
+          <div className="w-9 h-9 rounded-full bg-paper-100 grid place-items-center text-[11px] font-semibold text-ink-700">FT</div>
+        </div>
       </div>
     </aside>
   );
