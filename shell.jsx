@@ -9,11 +9,13 @@ function SideRail({ screen, setScreen }) {
     { id:'simulator', label:'Simulator', Icon: window.Icons.Simulator },
   ];
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-[72px] bg-paper-0 border-r border-ink-100/80 flex flex-col items-center py-5 z-30">
-      <div className="w-10 h-10 rounded-xl bg-navy-900 text-paper-0 grid place-items-center mb-6">
-        <window.Icons.Logo size={20} />
+    <aside className="fixed left-0 top-0 bottom-0 w-[72px] bg-paper-0 border-r border-ink-100/80 flex flex-col items-center pb-5 z-30">
+      <div className="h-[60px] w-full grid place-items-center border-b border-ink-100/80 shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-navy-900 text-paper-0 grid place-items-center">
+          <window.Icons.Logo size={20} />
+        </div>
       </div>
-      <nav className="flex flex-col gap-1 items-center">
+      <nav className="flex flex-col gap-1 items-center mt-5">
         {items.map(({id,label,Icon}) => {
           const active = screen === id;
           return (
@@ -69,7 +71,7 @@ function TenantSwitcher({ orgs=[], activeOrgId, activeProductId, onSelectOrg, on
   return (
     <div ref={ref} className="relative shrink-0 self-center">
       <button onClick={()=>setOpen(o=>!o)}
-        className="w-[270px] rounded-lg hairline bg-paper-0 hover:bg-paper-50 px-3 py-2 text-left flex items-center gap-3">
+        className="w-[270px] rounded-lg bg-paper-0 hover:bg-paper-50 px-3 py-2 text-left flex items-center gap-3">
         <div className="w-8 h-8 rounded-md bg-navy-900 text-paper-0 grid place-items-center text-[11px] font-semibold">
           {activeOrg.name.split(' ').map(part => part[0]).join('').slice(0,2)}
         </div>
@@ -175,7 +177,7 @@ function TopBar({
   }, []);
 
   return (
-    <header className="hairline-b bg-paper-0/90 backdrop-blur sticky top-0 z-20">
+    <header className="border-b border-ink-100/80 bg-paper-0/90 backdrop-blur sticky top-0 z-20">
       <div className="max-w-[1440px] mx-auto px-8 h-[60px] flex items-center gap-5">
         <TenantSwitcher
           orgs={orgs}
