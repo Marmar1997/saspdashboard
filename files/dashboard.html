@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SASP Run 001 · Mutuo Giovani Italy · Synthetic Audience Diagnostic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=DM+Sans:opsz,wght@9..40,300..700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #ffffff;
+    --paper-tint: #ebe3d2;
+    --ink: #181612;
+    --ink-soft: #4a443a;
+    --ink-faint: #877f70;
+    --rule: #c9bfa9;
+    --rule-thin: #ddd4bd;
+    --oxblood: #7a1424;
+    --oxblood-bright: #a01b2e;
+    --amber: #b87618;
+    --sage: #4d6b4f;
+    --grid-bg: #f7f2e6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    font-feature-settings: "ss01", "ss02";
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 56px 64px 96px;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(122, 20, 36, 0.03) 0%, transparent 40%),
+      var(--paper);
+    position: relative;
+  }
+  /* paper texture */
+  .page::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      repeating-linear-gradient(45deg, transparent 0, transparent 2px, rgba(24,22,18,.012) 2px, rgba(24,22,18,.012) 3px),
+      repeating-linear-gradient(-45deg, transparent 0, transparent 2px, rgba(24,22,18,.008) 2px, rgba(24,22,18,.008) 3px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .page > * { position: relative; z-index: 1; }
+  
+  /* MASTHEAD */
+  .masthead {
+    border-top: 4px double var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding: 18px 0 14px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+    gap: 32px;
+    margin-bottom: 36px;
+  }
+  .masthead .left { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; color: var(--ink-soft); text-transform: uppercase; }
+  .masthead .left strong { color: var(--ink); display: block; margin-top: 2px; }
+  .title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 56px;
+    line-height: 0.95;
+    letter-spacing: -0.025em;
+    text-align: center;
+    font-variation-settings: 'opsz' 144, 'SOFT' 50;
+  }
+  .title em { font-style: italic; font-weight: 400; color: var(--oxblood); font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1; }
+  .masthead .right { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; color: var(--ink-soft); text-transform: uppercase; text-align: right; }
+  .masthead .right strong { color: var(--ink); display: block; margin-top: 2px; }
+  
+  .deck {
+    text-align: center;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 19px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+    font-variation-settings: 'opsz' 36;
+  }
+  .meta-row {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    margin-bottom: 48px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule-thin);
+  }
+  .meta-row span strong { color: var(--ink); font-weight: 500; }
+
+  /* SECTION HEADERS */
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--oxblood);
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 6px;
+    margin: 56px 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .section-title:first-of-type { margin-top: 0; }
+  .section-title .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+
+  /* AGGREGATE STRIP */
+  .aggregate {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--ink);
+    margin-bottom: 8px;
+    background: var(--grid-bg);
+  }
+  .aggregate > div {
+    padding: 22px 24px;
+    border-right: 1px solid var(--rule);
+  }
+  .aggregate > div:last-child { border-right: none; }
+  .agg-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+  .agg-headline {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    line-height: 1.15;
+    font-weight: 500;
+    font-variation-settings: 'opsz' 36;
+    color: var(--ink);
+  }
+  .agg-headline em { font-style: italic; color: var(--oxblood); }
+  .agg-score {
+    font-family: 'Fraunces', serif;
+    font-size: 64px;
+    font-weight: 400;
+    font-variation-settings: 'opsz' 144;
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -0.04em;
+  }
+  .agg-score .denom {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-faint);
+    letter-spacing: 0;
+  }
+  .agg-detail {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+
+  /* ARCHETYPE GRID */
+  .archetypes {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+  }
+  .arc {
+    border-right: 1px solid var(--rule);
+    padding: 24px 22px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .arc:last-child { border-right: none; }
+  .arc-header { border-bottom: 1px dotted var(--rule); padding-bottom: 14px; }
+  .arc-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--oxblood);
+    margin-bottom: 4px;
+  }
+  .arc-name {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.2;
+    font-variation-settings: 'opsz' 36;
+  }
+  .arc-weight {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    margin-top: 6px;
+    letter-spacing: 0.05em;
+  }
+  
+  .scores-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    border-top: 1px solid var(--rule-thin);
+    border-bottom: 1px solid var(--rule-thin);
+    padding: 14px 0;
+  }
+  .score-cell { text-align: center; }
+  .score-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 4px;
+  }
+  .score-value {
+    font-family: 'Fraunces', serif;
+    font-size: 30px;
+    font-weight: 500;
+    line-height: 1;
+    font-variation-settings: 'opsz' 144;
+    letter-spacing: -0.02em;
+  }
+  .score-value.s-low { color: var(--oxblood-bright); }
+  .score-value.s-mid { color: var(--amber); }
+  .score-value.s-high { color: var(--sage); }
+  .score-value.s-alarm { color: var(--oxblood); font-weight: 600; }
+
+  .objection {
+    font-size: 13.5px;
+    line-height: 1.45;
+  }
+  .objection-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+  .objection-quote {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 14.5px;
+    line-height: 1.4;
+    color: var(--ink);
+    border-left: 2px solid var(--oxblood);
+    padding-left: 12px;
+    margin-bottom: 10px;
+    font-variation-settings: 'opsz' 24;
+  }
+  .traceback {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .traceback .ko { color: var(--oxblood); }
+  .traceback .src { color: var(--ink-soft); }
+
+  /* DIFFERENTIATION PANEL */
+  .diff-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+  }
+  .diff-col { padding: 28px 28px 32px; border-right: 1px solid var(--rule); }
+  .diff-col:last-child { border-right: none; background: var(--grid-bg); }
+  .diff-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--paper);
+    background: var(--ink-faint);
+    padding: 4px 10px;
+    margin-bottom: 14px;
+  }
+  .diff-tag.sasp { background: var(--oxblood); color: var(--paper); }
+  .diff-headline {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    line-height: 1.2;
+    font-weight: 500;
+    font-variation-settings: 'opsz' 36;
+    margin-bottom: 18px;
+  }
+  .diff-headline em { font-style: italic; color: var(--oxblood); }
+  .diff-content {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    font-variation-settings: 'opsz' 24;
+  }
+  .diff-content.sasp { font-style: normal; color: var(--ink); font-family: 'DM Sans', sans-serif; font-size: 13.5px; }
+  .diff-content.sasp ol { padding-left: 18px; margin-top: 12px; }
+  .diff-content.sasp li { margin-bottom: 14px; }
+  .diff-content.sasp li strong { font-family: 'Fraunces', serif; font-style: italic; color: var(--ink); display: block; margin-bottom: 4px; font-size: 14.5px; font-variation-settings: 'opsz' 24; }
+  .diff-content.sasp li .meta { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-soft); display: block; margin-top: 4px; line-height: 1.5; }
+  .diff-content.sasp li .meta .ko { color: var(--oxblood); }
+
+  .diff-question {
+    grid-column: span 2;
+    border-top: 1px solid var(--ink);
+    padding: 22px 28px;
+    background: var(--ink);
+    color: var(--paper);
+    text-align: center;
+  }
+  .diff-question .lead {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--rule);
+    margin-bottom: 8px;
+  }
+  .diff-question .ask {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 22px;
+    font-weight: 400;
+    font-variation-settings: 'opsz' 36;
+    line-height: 1.3;
+  }
+
+  /* FOOTER */
+  .footer {
+    margin-top: 64px;
+    padding-top: 22px;
+    border-top: 4px double var(--ink);
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 40px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .footer h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .footer p { margin-bottom: 8px; }
+  .footer code { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--oxblood); }
+
+  /* TOP RULE WITH DOTS */
+  .ornament {
+    text-align: center;
+    color: var(--rule);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.5em;
+    margin: 8px 0 28px;
+  }
+
+  /* small print */
+  .small { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--ink-faint); letter-spacing: 0.05em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+  <div class="page">
+    
+    <header class="masthead">
+      <div class="left">
+        Run no.<br><strong>SASP/IT/MTG/001</strong>
+      </div>
+      <h1 class="title">Synthetic Audience<br><em>Diagnostic</em></h1>
+      <div class="right">
+        Date<br><strong>2026 · MAY · 08</strong>
+      </div>
+    </header>
+
+    <p class="deck">A pre-launch stress-test of <em>Intesa Sanpaolo Mutuo Giovani</em> against a synthetic audience of under-40 freelance professionals — sourced from real Italian signals, structured by epistemic objects, distributionally weighted on ISTAT &amp; Banca d'Italia data.</p>
+
+    <div class="meta-row">
+      <span>Use case · <strong>Mortgage</strong></span>
+      <span>Geography · <strong>Italy</strong></span>
+      <span>Audience · <strong>P.IVA · age 25–40</strong></span>
+      <span>Corpus · <strong>n=22 signals</strong></span>
+      <span>Archetypes · <strong>4</strong></span>
+      <span>KOs · <strong>13</strong></span>
+    </div>
+
+    <!-- AGGREGATE -->
+    <div class="section-title"><span>I. Population-weighted aggregate</span><span class="num">/01</span></div>
+    
+    <div class="aggregate">
+      <div>
+        <div class="agg-label">Findings · One line</div>
+        <div class="agg-headline">A welcoming product page <em>masking</em> a definitional ambiguity that loses ~46% of the targeted audience to friction.</div>
+        <div class="agg-detail">Atipico-vs-consumatore tension and ISEE cliff invisibility together account for the dominant signal in this run.</div>
+      </div>
+      <div>
+        <div class="agg-label">Trust</div>
+        <div class="agg-score">51<span class="denom">/100</span></div>
+        <div class="agg-detail">Below threshold. Driven by archetypes A1 &amp; A3 for distinct reasons.</div>
+      </div>
+      <div>
+        <div class="agg-label">Confusion</div>
+        <div class="agg-score">55<span class="denom">/100</span></div>
+        <div class="agg-detail">Highest in A1 (atipico framing) and A2 (Consap cliff).</div>
+      </div>
+      <div>
+        <div class="agg-label">Perceived Risk</div>
+        <div class="agg-score">57<span class="denom">/100</span></div>
+        <div class="agg-detail">Concentrated in A1 — life-stage anxiety + no-garante self-filter.</div>
+      </div>
+    </div>
+
+    <p class="small" style="margin-top: 12px;">Weights: A1 0.35 · A2 0.20 · A3 0.25 · A4 0.20 · Σ = 1.00</p>
+
+    <!-- ARCHETYPES -->
+    <div class="section-title"><span>II. Archetype detail</span><span class="num">/02</span></div>
+
+    <div class="archetypes">
+
+      <!-- A1 -->
+      <div class="arc">
+        <div class="arc-header">
+          <div class="arc-id">A1</div>
+          <div class="arc-name">Solo forfettario, Nord, low cushion</div>
+          <div class="arc-weight">35% · €18–25k net · P.IVA 3–5y</div>
+        </div>
+        <div class="scores-row">
+          <div class="score-cell"><div class="score-label">Trust</div><div class="score-value s-low">35</div></div>
+          <div class="score-cell"><div class="score-label">Confus.</div><div class="score-value s-alarm">75</div></div>
+          <div class="score-cell"><div class="score-label">Risk</div><div class="score-value s-alarm">80</div></div>
+        </div>
+        <div class="objection">
+          <div class="objection-label">Top objection</div>
+          <p class="objection-quote">"Reading the page, I cannot tell if I'm the consumer this product is for. The legal definition excludes 'professional activity' but the marketing welcomes me as 'atipico'."</p>
+          <div class="traceback">
+            <span class="ko">KO-09 · KO-13 · KO-01</span><br>
+            Tension <strong>T1</strong> (consumatore ambiguity)<br>
+            <span class="src">Source · intesasanpaolo.com<br>trasparenza/FI-1289 · §recipients</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- A2 -->
+      <div class="arc">
+        <div class="arc-header">
+          <div class="arc-id">A2</div>
+          <div class="arc-name">Forfettario in crescita, financially literate</div>
+          <div class="arc-weight">20% · €30–45k net · TAEG-aware</div>
+        </div>
+        <div class="scores-row">
+          <div class="score-cell"><div class="score-label">Trust</div><div class="score-value s-mid">50</div></div>
+          <div class="score-cell"><div class="score-label">Confus.</div><div class="score-value s-mid">55</div></div>
+          <div class="score-cell"><div class="score-label">Risk</div><div class="score-value s-mid">55</div></div>
+        </div>
+        <div class="objection">
+          <div class="objection-label">Top objection</div>
+          <p class="objection-quote">"I'm near the €40k ISEE cap. If I wait one year and grow, I lose Consap. Should I pull forward a decision the property doesn't justify?"</p>
+          <div class="traceback">
+            <span class="ko">KO-12 · KO-08</span><br>
+            Tension <strong>T5</strong> (ISEE cliff invisible)<br>
+            <span class="src">Source · MEF/Consap data · partitaiva.it editorial 2025</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- A3 -->
+      <div class="arc">
+        <div class="arc-header">
+          <div class="arc-id">A3</div>
+          <div class="arc-name">Ordinario professionista regolato</div>
+          <div class="arc-weight">25% · €40–80k · iscritto ad albo</div>
+        </div>
+        <div class="scores-row">
+          <div class="score-cell"><div class="score-label">Trust</div><div class="score-value s-high">65</div></div>
+          <div class="score-cell"><div class="score-label">Confus.</div><div class="score-value s-high">25</div></div>
+          <div class="score-cell"><div class="score-label">Risk</div><div class="score-value s-high">30</div></div>
+        </div>
+        <div class="objection">
+          <div class="objection-label">Top objection · grievance flavour</div>
+          <p class="objection-quote">"The product page targets me as 'atipico' but my ISEE rules me out of the Consap boost. I'm being marketed a product engineered to penalize my income."</p>
+          <div class="traceback">
+            <span class="ko">KO-12 (negative valence) · KO-02</span><br>
+            Tension <strong>T5</strong> (ISEE cliff)<br>
+            <span class="src">Source · agenziaentrate.gov.it · intesasanpaolo trasparenza</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- A4 -->
+      <div class="arc">
+        <div class="arc-header">
+          <div class="arc-id">A4</div>
+          <div class="arc-name">Cointestazione mista (P.IVA + dipendente)</div>
+          <div class="arc-weight">20% · €45–70k household · couple</div>
+        </div>
+        <div class="scores-row">
+          <div class="score-cell"><div class="score-label">Trust</div><div class="score-value s-mid">60</div></div>
+          <div class="score-cell"><div class="score-label">Confus.</div><div class="score-value s-mid">55</div></div>
+          <div class="score-cell"><div class="score-label">Risk</div><div class="score-value s-mid">50</div></div>
+        </div>
+        <div class="objection">
+          <div class="objection-label">Top objection</div>
+          <p class="objection-quote">"How will the bank read our cointestazione? Does my P.IVA penalize the dipendente partner's anchor profile?"</p>
+          <div class="traceback">
+            <span class="ko">KO-09 (asymmetric) · KO-13 · KO-01</span><br>
+            Tension <strong>T1</strong> (consumatore ambiguity)<br>
+            <span class="src">Source · forum.finanzaonline.com<br>thread 1856610 · paraphrased</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="small" style="margin-top: 12px; text-align: center;">— each objection traceable to KO → corpus signal → URL —</p>
+
+    <!-- DIFFERENTIATION -->
+    <div class="section-title"><span>III. SASP vs. generic LLM persona <em style="color: var(--ink-faint); font-style: italic; font-family: 'Fraunces', serif;">— same prompt, side-by-side</em></span><span class="num">/03</span></div>
+
+    <div class="diff-panel">
+      <div class="diff-col">
+        <span class="diff-tag">Generic LLM persona · stylistic</span>
+        <div class="diff-headline">"Italian under-40 freelance considering Mutuo Giovani — what concerns do you have?"</div>
+        <p class="diff-content">"Mi preoccupa il fatto che da partita IVA potrei non riuscire a dimostrare un reddito stabile. Mi chiedo se i tassi siano competitivi e se le polizze obbligatorie aumentino il costo. Vorrei sapere se posso accedere alle agevolazioni under-36."</p>
+        <p style="margin-top: 18px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-soft); line-height: 1.6;">
+          → Plausible. Stylistic.<br>
+          → No source trace.<br>
+          → Could be any country.<br>
+          → Reproducibly different on each prompt run.
+        </p>
+      </div>
+      <div class="diff-col">
+        <span class="diff-tag sasp">SASP · A1 · structured</span>
+        <div class="diff-headline">Same prompt, <em>same archetype</em>, three sourced objections.</div>
+        <div class="diff-content sasp">
+          <ol>
+            <li>
+              <strong>"Sono davvero il destinatario di questo prodotto?"</strong>
+              <span class="meta"><span class="ko">KO-09 · KO-13 · KO-01</span> · T1<br>src · intesasanpaolo.com / trasparenza FI-1289</span>
+            </li>
+            <li>
+              <strong>"Senza garante familiare ho qualche speranza?"</strong>
+              <span class="meta"><span class="ko">KO-10 · KO-07 · KO-02</span><br>src · forum.finanzaonline.com · thread 1865668</span>
+            </li>
+            <li>
+              <strong>"Quali polizze sono davvero obbligatorie?"</strong>
+              <span class="meta"><span class="ko">KO-05 · KO-06</span> · T3<br>src · forum durable heuristic n=4 threads</span>
+            </li>
+          </ol>
+        </div>
+      </div>
+      <div class="diff-question">
+        <div class="lead">— the question —</div>
+        <div class="ask">"Which one would you brief a CMO with, before they spend €5M on launch?"</div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div>
+        <h4>Methodology · v0.1 demo</h4>
+        <p>Curated corpus extraction from publicly accessible Italian sources (forum.finanzaonline.com, Intesa Sanpaolo trasparenza, mutui.it, idealista.it, partitaiva.it, MEF, ISTAT, Banca d'Italia data via MutuiSupermarket Q1 2025). All signals paraphrased; no verbatim reproduction. KO library structured per OIDA-style epistemic relations (supports/contradicts/co_occurs/triggers). Distributional weights from §03 anchored to ISTAT lavoratori autonomi count (5.23M Oct 2025), MEF P.IVA tax statistics, Banca d'Italia mortgage erogato (Q1 2025: €13.03B, +52.6% YoY).</p>
+        <p>Scoring rubric is transparent and hand-computed for v0.1. Production simulator computes numerically from KO activation vectors. Sunday demo prioritizes auditability over automation.</p>
+      </div>
+      <div>
+        <h4>Scope flags · open</h4>
+        <p>· N=22 signals; production target ≥500 with native-Italian human-in-the-loop validation</p>
+        <p>· 4 archetypes; MVP target 20</p>
+        <p>· LLM-persona benchmark constructed for demo, not run as controlled experiment</p>
+        <p>· France &amp; Germany country-layer stubs in roadmap — not in this run</p>
+        <p style="margin-top: 14px;"><code>kba/sasp · run 001 · 2026-05-08</code></p>
+      </div>
+    </footer>
+
+  </div>
+</body>
+</html>

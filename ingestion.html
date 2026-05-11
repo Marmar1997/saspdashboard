@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SASP Ingestion 001 · Architecture · Italian mortgage use case</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=DM+Sans:opsz,wght@9..40,300..700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3ede0;
+    --paper-tint: #ebe3d2;
+    --ink: #181612;
+    --ink-soft: #4a443a;
+    --ink-faint: #877f70;
+    --rule: #c9bfa9;
+    --rule-thin: #ddd4bd;
+    --oxblood: #7a1424;
+    --oxblood-bright: #a01b2e;
+    --amber: #b87618;
+    --sage: #4d6b4f;
+    --grid-bg: #f7f2e6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    font-feature-settings: "ss01", "ss02";
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 56px 64px 96px;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(122, 20, 36, 0.03) 0%, transparent 40%),
+      var(--paper);
+    position: relative;
+  }
+  .page::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      repeating-linear-gradient(45deg, transparent 0, transparent 2px, rgba(24,22,18,.012) 2px, rgba(24,22,18,.012) 3px),
+      repeating-linear-gradient(-45deg, transparent 0, transparent 2px, rgba(24,22,18,.008) 2px, rgba(24,22,18,.008) 3px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .page > * { position: relative; z-index: 1; }
+
+  /* MASTHEAD */
+  .masthead {
+    border-top: 4px double var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding: 18px 0 14px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+    gap: 32px;
+    margin-bottom: 36px;
+  }
+  .masthead .left { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; color: var(--ink-soft); text-transform: uppercase; }
+  .masthead .left strong { color: var(--ink); display: block; margin-top: 2px; }
+  .title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 56px;
+    line-height: 0.95;
+    letter-spacing: -0.025em;
+    text-align: center;
+    font-variation-settings: 'opsz' 144, 'SOFT' 50;
+  }
+  .title em { font-style: italic; font-weight: 400; color: var(--oxblood); font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1; }
+  .masthead .right { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; color: var(--ink-soft); text-transform: uppercase; text-align: right; }
+  .masthead .right strong { color: var(--ink); display: block; margin-top: 2px; }
+
+  .deck {
+    text-align: center;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 19px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+    font-variation-settings: 'opsz' 36;
+    max-width: 880px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .deck em { color: var(--oxblood); }
+
+  .meta-row {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    margin-top: 18px;
+    margin-bottom: 48px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule-thin);
+  }
+  .meta-row span strong { color: var(--ink); font-weight: 500; }
+
+  /* SECTION HEADERS */
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--oxblood);
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 6px;
+    margin: 56px 0 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .section-title:first-of-type { margin-top: 0; }
+  .section-title .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+  .section-title em { font-style: italic; color: var(--ink-faint); font-family: 'Fraunces', serif; text-transform: none; letter-spacing: 0; font-size: 13px; }
+
+  /* PROSE */
+  .prose {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 78ch;
+  }
+  .prose strong { color: var(--ink); font-weight: 600; }
+  .prose em { font-style: italic; color: var(--oxblood); }
+  .prose p { margin-bottom: 14px; }
+  .prose .lead { color: var(--ink); }
+
+  /* CALLOUT (for "what ingestion is NOT") */
+  .callout {
+    border-left: 3px solid var(--oxblood);
+    background: var(--paper-tint);
+    padding: 16px 20px;
+    margin: 20px 0 4px;
+    max-width: 78ch;
+  }
+  .callout .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--oxblood);
+    margin-bottom: 10px;
+  }
+  .callout ul { list-style: none; padding: 0; }
+  .callout li {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    padding-left: 18px;
+    margin-bottom: 8px;
+    position: relative;
+  }
+  .callout li:last-child { margin-bottom: 0; }
+  .callout li::before {
+    content: '✕';
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--oxblood);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .callout li strong { color: var(--ink); font-weight: 600; }
+  .callout .closer {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 15px;
+    color: var(--ink);
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dotted var(--rule);
+    font-variation-settings: 'opsz' 36;
+  }
+  .callout .closer em { color: var(--oxblood); }
+
+  /* TWO-FAMILY GRID for §2 */
+  .families {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    margin: 8px 0 16px;
+  }
+  .family { padding: 22px 26px; border-right: 1px solid var(--rule); }
+  .family:last-child { border-right: none; background: var(--grid-bg); }
+  .family .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--paper);
+    background: var(--oxblood);
+    padding: 4px 10px;
+    margin-bottom: 12px;
+  }
+  .family .tag.q { background: var(--ink-faint); }
+  .family h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    font-weight: 500;
+    line-height: 1.25;
+    font-variation-settings: 'opsz' 36;
+    margin-bottom: 10px;
+    color: var(--ink);
+  }
+  .family h3 em { font-style: italic; color: var(--oxblood); }
+  .family p {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  .family p:last-child { margin-bottom: 0; }
+  .failmode {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.5;
+    font-variation-settings: 'opsz' 36;
+  }
+  .failmode strong {
+    display: block;
+    font-style: normal;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--rule);
+    margin-bottom: 6px;
+  }
+
+  /* SOURCE INVENTORY TABLE */
+  .inventory {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    margin: 8px 0 12px;
+    font-size: 11.5px;
+  }
+  .inventory thead { background: var(--ink); color: var(--paper); }
+  .inventory thead th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+    padding: 10px 11px;
+    text-align: left;
+    border-right: 1px solid var(--ink-soft);
+    vertical-align: top;
+  }
+  .inventory thead th:last-child { border-right: none; }
+  .inventory tbody td {
+    padding: 11px;
+    border-right: 1px dotted var(--rule);
+    border-bottom: 1px solid var(--rule-thin);
+    vertical-align: top;
+    line-height: 1.45;
+    color: var(--ink-soft);
+  }
+  .inventory tbody td:last-child { border-right: none; }
+  .inventory tbody td:first-child { color: var(--ink); }
+  .inventory .group-header td {
+    background: var(--grid-bg);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--oxblood);
+    border-bottom: 1px solid var(--ink);
+    border-top: 1px solid var(--ink);
+    padding: 10px 12px;
+    font-variation-settings: 'opsz' 36;
+  }
+  .inventory .src-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+  .inventory .src-note {
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-top: 3px;
+    font-style: italic;
+  }
+
+  /* LAYER BLOCKS for §4 */
+  .layers {
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    margin: 8px 0 12px;
+  }
+  .layer {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 28px;
+    padding: 22px 26px;
+    border-bottom: 1px dotted var(--rule);
+  }
+  .layer:last-child { border-bottom: none; }
+  .layer-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--oxblood);
+  }
+  .layer-tag strong {
+    display: block;
+    font-size: 22px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: -0.01em;
+    margin-top: 4px;
+    font-weight: 500;
+    font-variation-settings: 'opsz' 36;
+  }
+  .layer-body {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .layer-body strong { color: var(--ink); font-weight: 600; }
+  .layer-body em { font-style: italic; color: var(--oxblood); }
+
+  /* VALIDATION BLOCKS for §5 */
+  .vblocks {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    margin: 8px 0 12px;
+  }
+  .vblock {
+    padding: 22px 24px;
+    border-right: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .vblock:nth-child(2n) { border-right: none; }
+  .vblock:nth-last-child(-n+2) { border-bottom: none; }
+  .vblock h4 {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 10px;
+    font-variation-settings: 'opsz' 36;
+  }
+  .vblock h4::before {
+    content: attr(data-num);
+    font-family: 'JetBrains Mono', monospace;
+    font-style: normal;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--oxblood);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .vblock p {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .vblock p em { font-style: italic; color: var(--oxblood); }
+  .vblock p strong { color: var(--ink); font-weight: 600; }
+
+  /* ROADMAP TABLE */
+  .roadmap {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    margin: 8px 0 18px;
+  }
+  .roadmap thead { background: var(--ink); color: var(--paper); }
+  .roadmap thead th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 11px 14px;
+    text-align: left;
+    font-weight: 500;
+    border-right: 1px solid var(--ink-soft);
+  }
+  .roadmap thead th:last-child { border-right: none; }
+  .roadmap tbody td {
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--rule-thin);
+    border-right: 1px dotted var(--rule);
+    font-size: 13px;
+    line-height: 1.5;
+    vertical-align: top;
+    color: var(--ink-soft);
+  }
+  .roadmap tbody td:last-child { border-right: none; }
+  .roadmap tbody td:first-child {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--oxblood);
+    font-size: 14px;
+    width: 24%;
+    font-variation-settings: 'opsz' 36;
+  }
+  .roadmap tbody td:nth-child(4) {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink);
+    width: 18%;
+  }
+
+  /* OWNERS STRIP */
+  .owners {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border: 1px solid var(--ink);
+    background: var(--grid-bg);
+    margin: 16px 0 0;
+  }
+  .owner {
+    padding: 14px 16px;
+    border-right: 1px solid var(--rule);
+  }
+  .owner:last-child { border-right: none; }
+  .owner .name {
+    font-family: 'Fraunces', serif;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--ink);
+    font-variation-settings: 'opsz' 36;
+  }
+  .owner .role {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  /* LEGAL LIST for §7 */
+  .legal {
+    list-style: none;
+    padding: 0;
+    max-width: 90ch;
+  }
+  .legal li {
+    padding: 14px 0 14px 36px;
+    border-bottom: 1px dotted var(--rule);
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    position: relative;
+  }
+  .legal li:last-child { border-bottom: none; }
+  .legal li::before {
+    content: attr(data-mark);
+    position: absolute;
+    left: 0;
+    top: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--oxblood);
+  }
+  .legal li strong { color: var(--ink); font-weight: 600; }
+  .legal li em { font-style: italic; color: var(--oxblood); }
+
+  /* WARNINGS for §8 */
+  ul.warnings {
+    list-style: none;
+    padding: 0;
+  }
+  ul.warnings li {
+    border-left: 3px solid var(--oxblood);
+    padding: 14px 20px;
+    margin-bottom: 12px;
+    background: var(--paper-tint);
+    font-size: 14px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--ink);
+    font-variation-settings: 'opsz' 24;
+  }
+  ul.warnings li:last-child { margin-bottom: 0; }
+  ul.warnings li strong {
+    display: block;
+    font-style: normal;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--oxblood);
+    font-weight: 500;
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  ul.warnings li em { font-style: normal; color: var(--oxblood); font-weight: 500; }
+
+  /* VERIFY MARKER */
+  .verify {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--oxblood-bright);
+    font-size: 0.82em;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    margin-left: 2px;
+    font-variation-settings: 'opsz' 24;
+  }
+
+  /* FOOTER */
+  .footer {
+    margin-top: 72px;
+    padding-top: 22px;
+    border-top: 4px double var(--ink);
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 40px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .footer h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .footer p { margin-bottom: 8px; }
+  .footer code { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--oxblood); }
+
+  .ornament {
+    text-align: center;
+    color: var(--rule);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.5em;
+    margin: 8px 0 0;
+  }
+  .small { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--ink-faint); letter-spacing: 0.05em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+  <div class="page">
+
+    <header class="masthead">
+      <div class="left">
+        Run no.<br><strong>SASP/IT/INGESTION/001</strong>
+      </div>
+      <h1 class="title">Ingestion<br><em>Architecture</em></h1>
+      <div class="right">
+        Date<br><strong>2026 · MAY · 11</strong>
+      </div>
+    </header>
+
+    <p class="deck">A companion document to the Sunday demo pack — how SASP <em>ingests data</em> for the Italian mortgage use case, the methodological line we hold, and the production path from a curated demo corpus to a country-deep pipeline.</p>
+
+    <div class="meta-row">
+      <span>Use case · <strong>Mortgage</strong></span>
+      <span>Geography · <strong>Italy</strong></span>
+      <span>Layers · <strong>1 – 3</strong></span>
+      <span>Companion to · <strong>SASP/IT/MTG/001</strong></span>
+      <span>Status · <strong>v0.1 demo + production roadmap</strong></span>
+    </div>
+
+    <!-- §1 -->
+    <div class="section-title"><span>I. What ingestion is and is not in SASP</span><span class="num">/01</span></div>
+
+    <div class="prose">
+      <p>Ingestion in SASP covers <strong>layers 1–3</strong> of an 8-layer architecture<span class="verify">[verify]</span>: Data Sources → Source Ranking / Channel Analysis → Raw-to-Social-Signal Extraction. The differentiator lives downstream in <strong>layers 4–6</strong> — epistemic structuring into Knowledge Objects, archetype generation as KO activation patterns, and the simulation itself. Ingestion is the foundation that makes those downstream layers worth running: a clean, traceable, country-deep substrate of language, belief, and distribution. If ingestion is opaque or unrepresentative, every downstream layer inherits the problem.</p>
+    </div>
+
+    <div class="callout">
+      <div class="label">What ingestion is NOT</div>
+      <ul>
+        <li><strong>Not "more data = better."</strong> Volume past the representativeness frontier is noise, and noise compounds through the KO layer. A 500-signal corpus that mirrors Finanzaonline's user skew is worse than a 100-signal corpus that doesn't.</li>
+        <li><strong>Not Reddit-first.</strong> Reddit under-represents Italian mortgage language by an order of magnitude versus Finanzaonline and the Italian intermediary editorial ecosystem. Defaulting to Reddit is a tell that the ingestion is not country-deep.</li>
+        <li><strong>Not scrape-everything.</strong> The legal posture is public-only, paraphrased, no authenticated scraping. TOS compliance is a per-source design decision, not a default.</li>
+      </ul>
+      <p class="closer">The frame to hold: <em>representativeness, not volume</em>.</p>
+    </div>
+
+    <!-- §2 -->
+    <div class="section-title"><span>II. The methodological line</span><span class="num">/02</span></div>
+
+    <div class="prose">
+      <p>Two source families, two roles, never mixed in the same weighting step.</p>
+    </div>
+
+    <div class="families">
+      <div class="family">
+        <span class="tag">Qualitative → Knowledge Objects</span>
+        <h3>Forums &amp; first-person sources <em>feed belief</em>.</h3>
+        <p>Finanzaonline threads, intermediary reader-comment surfaces, paraphrased forum exchanges — these are the qualitative substrate for belief, fear, heuristic, idiom, distrust-pattern.</p>
+        <p>They tell us what the audience actually says, what language they recognize, what shame layers exist (e.g. garante familiare as both practical recourse and identity marker, KO-10).</p>
+      </div>
+      <div class="family">
+        <span class="tag q">Quantitative → Distribution shape</span>
+        <h3>Official sources <em>feed weight</em>.</h3>
+        <p>ISTAT, MEF, Banca d'Italia, Consap, Agenzia delle Entrate, BCE / ECB — the quantitative substrate for population weighting, age distribution, regional intensity, regime forfettario vs. ordinario splits, ISEE cliff dynamics, rate-environment context.</p>
+        <p>These feed the audience-generation layer (5), not the KO layer (4).</p>
+      </div>
+      <div class="failmode" style="grid-column: span 2;">
+        <strong>— The failure mode —</strong>
+        Mixing the two. Counting Finanzaonline post-volume as a proxy for population frequency, or treating ISTAT averages as belief signals, collapses two distinct epistemic inputs into one noisy aggregate. Forum scrape volume does not estimate Italy. The two families meet only at layer 5, under explicit, documented weighting rules.
+      </div>
+    </div>
+
+    <!-- §3 -->
+    <div class="section-title"><span>III. Source inventory — Italian mortgage use case</span><span class="num">/03</span></div>
+
+    <div class="prose" style="margin-bottom: 16px;">
+      <p>All sources present in <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--oxblood);">files/01_signal_corpus.md</code> or <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--oxblood);">files/03_distribution_data.md</code>. No external sources invented. Status reflects the v0.1 demo state.</p>
+    </div>
+
+    <table class="inventory">
+      <thead>
+        <tr>
+          <th style="width: 19%;">Source</th>
+          <th style="width: 13%;">Type</th>
+          <th style="width: 12%;">Access</th>
+          <th style="width: 12%;">Refresh</th>
+          <th style="width: 16%;">Role</th>
+          <th style="width: 15%;">Legal posture</th>
+          <th style="width: 13%;">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="group-header"><td colspan="7">Forums &amp; first-person — language &amp; belief input</td></tr>
+        <tr>
+          <td><span class="src-name">forum.finanzaonline.com</span><span class="src-note">Mutui sub-forum · 6 threads 2014–2026</span></td>
+          <td>Public Italian finance forum</td>
+          <td>Public web, no auth</td>
+          <td>Manual today; weekly polling planned<span class="verify">[verify]</span></td>
+          <td>Language &amp; belief → KOs</td>
+          <td>Public · paraphrased · no PII</td>
+          <td>Live v0.1 (manual)</td>
+        </tr>
+
+        <tr class="group-header"><td colspan="7">Bank &amp; intermediary marketing surfaces — product-side &amp; positioning language</td></tr>
+        <tr>
+          <td><span class="src-name">intesasanpaolo.com</span><span class="src-note">Mutuo Giovani pages + trasparenza PDF</span></td>
+          <td>Bank product &amp; legal disclosure</td>
+          <td>Public web + PDF</td>
+          <td>Manual; monthly planned<span class="verify">[verify]</span></td>
+          <td>Marketing / reality tension surface</td>
+          <td>Public · paraphrased</td>
+          <td>Live v0.1 (manual)</td>
+        </tr>
+        <tr>
+          <td><span class="src-name">mutuionline.it / mutui.it / mutuisupermarket.it</span><span class="src-note">incl. Osservatorio Q1 2025</span></td>
+          <td>Mortgage comparator / aggregator</td>
+          <td>Public web</td>
+          <td>Manual; monthly planned<span class="verify">[verify]</span></td>
+          <td>Intermediary positioning + market data</td>
+          <td>Public · paraphrased</td>
+          <td>Live v0.1 (manual)</td>
+        </tr>
+        <tr>
+          <td><span class="src-name">immobiliare.it</span><span class="src-note">Dec 2025 article</span></td>
+          <td>Real-estate portal editorial</td>
+          <td>Public web</td>
+          <td>Manual today</td>
+          <td>Intermediary framing · threshold heuristics</td>
+          <td>Public · paraphrased</td>
+          <td>Live v0.1 (manual)</td>
+        </tr>
+        <tr>
+          <td><span class="src-name">idealista.it</span><span class="src-note">Apr 2024 article</span></td>
+          <td>Real-estate portal editorial</td>
+          <td>Public web</td>
+          <td>Manual today</td>
+          <td>Consap framing · under-36 positioning</td>
+          <td>Public · paraphrased</td>
+          <td>Live v0.1 (manual)</td>
+        </tr>
+        <tr>
+          <td><span class="src-name">Italian intermediary editorial</span><span class="src-note">tassomutuo · telemutuo · mutuiqui · partitaiva · laquiloneimmobiliare</span></td>
+          <td>Mortgage &amp; freelance-finance editorial</td>
+          <td>Public web</td>
+          <td>Manual today</td>
+          <td>Folk-standard thresholds · memetic norms</td>
+          <td>Public · paraphrased</td>
+          <td>Live v0.1 (manual)</td>
+        </tr>
+
+        <tr class="group-header"><td colspan="7">Official / regulatory — distribution shape input</td></tr>
+        <tr>
+          <td><span class="src-name">ISTAT</span><span class="src-note">lavoratori autonomi · Oct 2025</span></td>
+          <td>National statistical office</td>
+          <td>Public release</td>
+          <td>Quarterly</td>
+          <td>Distribution shape · total autonomi (5.23M)</td>
+          <td>Public · attributed</td>
+          <td>Live v0.1 (manual)</td>
+        </tr>
+        <tr>
+          <td><span class="src-name">MEF / Agenzia delle Entrate</span><span class="src-note">P.IVA statistics · regime forfettario</span></td>
+          <td>Tax &amp; finance ministry</td>
+          <td>Public release</td>
+          <td>Annual</td>
+          <td>P.IVA stock · forfettario share · mean reddito</td>
+          <td>Public · attributed</td>
+          <td>Live v0.1 (manual)</td>
+        </tr>
+        <tr>
+          <td><span class="src-name">Banca d'Italia</span><span class="src-note">mortgage erogato Q1 2025</span></td>
+          <td>Central bank</td>
+          <td>Public; aggregator-mediated in v0.1</td>
+          <td>Quarterly</td>
+          <td>Market context · €13.03B · +52.6% YoY</td>
+          <td>Public · attributed</td>
+          <td>Live (via aggregator); direct planned</td>
+        </tr>
+        <tr>
+          <td><span class="src-name">Consap</span><span class="src-note">Fondo Garanzia Mutui Prima Casa · Legge di Bilancio 2025</span></td>
+          <td>State guarantee fund</td>
+          <td>Public reporting</td>
+          <td>Annual / on legislative change</td>
+          <td>Under-36 dynamics · ISEE cliff · fund renewal</td>
+          <td>Public · attributed</td>
+          <td>Live v0.1 (manual)</td>
+        </tr>
+        <tr>
+          <td><span class="src-name">Agenzia delle Entrate · Osservatorio Mercato Immobiliare</span></td>
+          <td>Real-estate transactions registry</td>
+          <td>Public release</td>
+          <td>Quarterly</td>
+          <td>Compravendite · prima-casa share · mortgage incidence</td>
+          <td>Public · attributed</td>
+          <td>Live v0.1 (manual)</td>
+        </tr>
+        <tr>
+          <td><span class="src-name">BCE / ECB</span><span class="src-note">policy / rates · referenced via IT press</span></td>
+          <td>European central bank</td>
+          <td>Public communications</td>
+          <td>Per policy meeting</td>
+          <td>Rate-environment context (KO-11)</td>
+          <td>Public · attributed</td>
+          <td>Live v0.1 (indirect)</td>
+        </tr>
+        <tr>
+          <td><span class="src-name">Italian financial press</span><span class="src-note">Sole 24 Ore · Money.it</span></td>
+          <td>Press aggregating official data</td>
+          <td>Public web</td>
+          <td>Manual today; RSS planned<span class="verify">[verify]</span></td>
+          <td>P.IVA opens by demographic · policy timing</td>
+          <td>Public · paraphrased</td>
+          <td>Live v0.1 (manual)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- §4 -->
+    <div class="section-title"><span>IV. Pipeline architecture <em>— layers 1–3</em></span><span class="num">/04</span></div>
+
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-tag">Layer 1<strong>Data Sources</strong></div>
+        <div class="layer-body">Per-source-type connectors: <strong>HTML/RSS crawler</strong> for public web (forum threads, intermediary editorial, press), <strong>PDF parser</strong> for bank trasparenza documents, <strong>structured-data fetchers</strong> for official statistics endpoints (ISTAT, MEF, Agenzia delle Entrate Osservatorio). One connector class per source family, each with its own rate limits, TOS, and authentication posture documented. For v0.1 the connectors are stand-ins for hand extraction; the abstraction holds and the production swap is plumbing.</div>
+      </div>
+      <div class="layer">
+        <div class="layer-tag">Layer 2<strong>Source Ranking &amp; Channel Analysis</strong></div>
+        <div class="layer-body">Per-item <strong>relevance scoring</strong> against the active corpus theme set (A through F for the mortgage case), <strong>freshness weighting</strong> (recency-decayed for time-sensitive themes like rate environment, neutral for durable heuristics like garante shame), <strong>platform-bias annotation</strong> (Finanzaonline-heavy items flagged as urban/male-skewed per the corpus disclosure), and <strong>near-duplicate clustering</strong> at the paraphrase level so the same heuristic repeated across five intermediary articles registers as one signal, not five.</div>
+      </div>
+      <div class="layer">
+        <div class="layer-tag">Layer 3<strong>Raw → Social Signal</strong></div>
+        <div class="layer-body">Each raw item passes through a <strong>paraphraser</strong> that preserves semantic content while breaking verbatim string match (copyright posture); a <strong>source-tagger</strong> that records URL, date, platform, and access path; a <strong>theme assigner</strong> that maps to the active corpus taxonomy; and a <strong>native-Italian human-in-the-loop validator</strong> who catches what the paraphraser misses — irony, regional idiom, affective register, the difference between <em>atipico</em> as legal category and <em>atipico</em> as identity wound.</div>
+      </div>
+    </div>
+
+    <!-- §5 -->
+    <div class="section-title"><span>V. Validation and human-in-the-loop</span><span class="num">/05</span></div>
+
+    <div class="vblocks">
+      <div class="vblock">
+        <h4 data-num="V·1 — WHO &amp; WHAT">Native-Italian validation step</h4>
+        <p>A validator with Italian as a working language reviews each signal — not as a translation gate, but as an <em>interpretive</em> gate. They detect irony (<strong>"fisso, almeno sai come muori"</strong> — humorous and serious at once), catch regional idiom and tax-regime-specific vocabulary, distinguish <em>atipico</em> as legal category from <em>atipico</em> as identity wound, and flag platform-bias drift (e.g. a theme drifting Finanzaonline-heavy and needing counter-balancing). v0.1 is ad-hoc and single-validator; production is multi-validator with inter-rater agreement.</p>
+      </div>
+      <div class="vblock">
+        <h4 data-num="V·2 — CONTRADICTIONS">Conflict-resolution protocol</h4>
+        <p>When sources disagree on a substantive claim — bank product page says a polizza is <em>"obbligatoria"</em>, forum heuristic says only incendio is legally mandatory — the default rule is to preserve both as separate KOs with their relations annotated (<strong>contradicts</strong>, see KO-05 ↔ bank framing of ProteggiMutuo). Resolution-by-truth is out of scope at the ingestion layer. The contradiction itself is the signal, and surfacing it is what SASP delivers downstream.</p>
+      </div>
+      <div class="vblock">
+        <h4 data-num="V·3 — TIME">Freshness checks &amp; signal expiry</h4>
+        <p>Time-sensitive signals (rate-environment narratives, regulatory window dates like the Consap renewal through 31 Dec 2027) carry an <strong>expiry</strong>; durable heuristics (atipico identity, garante shame, TAEG vs TAN literacy) do not. Expired signals are <strong>retired</strong>, not deleted — retained for longitudinal comparison and audit.</p>
+      </div>
+      <div class="vblock">
+        <h4 data-num="V·4 — WHY HITL">Why automated-only is insufficient</h4>
+        <p>Paraphrase quality, irony detection, affective register, platform-bias correction, and country-specific tax/regulatory nuance are all places where automation systematically loses precisely what makes the SASP corpus differentiated from a generic LLM persona. <em>A generic ingestion pipeline produces a generic output.</em> The HITL step is the structural feature that prevents drift to the mean.</p>
+      </div>
+    </div>
+
+    <!-- §6 -->
+    <div class="section-title"><span>VI. Current state vs production roadmap</span><span class="num">/06</span></div>
+
+    <table class="roadmap">
+      <thead>
+        <tr>
+          <th>Dimension</th>
+          <th>Demo v0.1 (today)</th>
+          <th>Production target</th>
+          <th>Timeline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Signal volume</td>
+          <td>22 manually curated signals across 6 themes</td>
+          <td>≥ 500 signals per use case</td>
+          <td>6 – 8 weeks<span class="verify">[verify]</span></td>
+        </tr>
+        <tr>
+          <td>Source coverage</td>
+          <td>6 source types (forum, bank, intermediary editorial, real-estate portal, official statistics, financial press)</td>
+          <td>12+ source types per country</td>
+          <td>6 – 8 weeks<span class="verify">[verify]</span></td>
+        </tr>
+        <tr>
+          <td>Automation</td>
+          <td>0% — fully manual extraction</td>
+          <td>~60% automated + ~40% HITL<span class="verify">[verify]</span></td>
+          <td>8 – 12 weeks</td>
+        </tr>
+        <tr>
+          <td>Italian validation</td>
+          <td>Ad-hoc · single-validator</td>
+          <td>Systematic · multi-validator · inter-rater agreement</td>
+          <td>4 weeks<span class="verify">[verify]</span></td>
+        </tr>
+        <tr>
+          <td>Country coverage</td>
+          <td>Italy (mortgage v0.1)</td>
+          <td>Italy full + France / Germany stubs</td>
+          <td>Q1 deliverable</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="owners">
+      <div class="owner">
+        <div class="name">Adan<span class="verify">[verify]</span></div>
+        <div class="role">Engineering · ingestion infra · connectors · paraphraser</div>
+      </div>
+      <div class="owner">
+        <div class="name">Maryam</div>
+        <div class="role">Methodology · validation protocol · corpus taxonomy</div>
+      </div>
+      <div class="owner">
+        <div class="name">Carlo<span class="verify">[verify]</span></div>
+        <div class="role">Archetype-layer integration · layer 4 → 5 handoff</div>
+      </div>
+      <div class="owner">
+        <div class="name">Federico</div>
+        <div class="role">Commercial framing · scope · client scoping</div>
+      </div>
+    </div>
+
+    <!-- §7 -->
+    <div class="section-title"><span>VII. Legal &amp; GDPR posture</span><span class="num">/07</span></div>
+
+    <ul class="legal">
+      <li data-mark="01"><strong>Public sources only, no authenticated scraping.</strong> No login walls, no OAuth-gated APIs, no paywalled content. Each connector is reviewed against source TOS before going live.</li>
+      <li data-mark="02"><strong>All content paraphrased, never reproduced verbatim.</strong> The paraphraser preserves semantic content while breaking exact string match. This is the corpus-side disclosure already in <em>files/01_signal_corpus.md</em> and the posture we hold publicly.</li>
+      <li data-mark="03"><strong>No PII collected or stored.</strong> Forum-level handles, where retained, are at the granularity already public on the source platform and are not linked to identity. No emails, names, addresses, phone numbers, or fiscal codes.</li>
+      <li data-mark="04"><strong>Production client deployments include DPIA setup.</strong> A Data Protection Impact Assessment is part of every client-facing production deployment, per the privacy Q&amp;A in <em>files/07_demo_narrative.md</em>.</li>
+      <li data-mark="05"><strong>TOS compliance per source.</strong> <em>Reddit API restrictions since 2023</em><span class="verify">[verify]</span> make Reddit-based ingestion increasingly costly and bandwidth-capped — not material for the Italian mortgage use case, relevant for any future non-IT scope. <em>Facebook groups are closed unless joined manually</em><span class="verify">[verify]</span> and are explicitly out of scope for automated ingestion.</li>
+    </ul>
+
+    <!-- §8 -->
+    <div class="section-title"><span>VIII. What this is <em>not</em> — the warnings</span><span class="num">/08</span></div>
+
+    <ul class="warnings">
+      <li><strong>— 01 —</strong>NOT a substitute for live customer research with the bank's actual customers. SASP simulates a synthetic audience grounded in public Italian signals. It complements — does not replace — direct customer interviews, branch-level qualitative work, or transactional cohort analysis that only the bank's own data can support.</li>
+      <li><strong>— 02 —</strong>NOT a global broad-and-shallow ingestion. SASP is EU-native and country-deep by design. Buyers wanting a one-pipeline-thirty-countries platform should go elsewhere — that is a different product with different trade-offs, and we should not pretend to be it.</li>
+      <li><strong>— 03 —</strong>NOT a justification for compensating thin local data with cross-country volume. Re-using French forum signals to fill gaps in Italian coverage breaks the country-layer logic the architecture exists to protect. Every country layer stands on its own corpus, validators, and distributional anchors — or it does not stand.</li>
+    </ul>
+
+    <p class="ornament">· · · · ·</p>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div>
+        <h4>Methodology · v0.1 demo</h4>
+        <p>Ingestion in v0.1 is curated, paraphrased, source-tagged, theme-assigned, and hand-validated. Sources drawn exclusively from the corpus references in <em>files/01_signal_corpus.md</em> and <em>files/03_distribution_data.md</em>. No external sources invented; no claims unsupported by the pack added without an explicit <span class="verify">[verify]</span> marker for spot-checking before Sunday.</p>
+        <p>Production scales the same methodology with automated connectors (~60% target<span class="verify">[verify]</span>) layered under a multi-validator HITL step (~40%). Country-deep, not broad-and-shallow.</p>
+      </div>
+      <div>
+        <h4>Scope flags · open</h4>
+        <p>· v0.1 is a curated demo corpus, not a production pipeline</p>
+        <p>· Validator team forming; protocol ad-hoc today</p>
+        <p>· FR / DE country layers are stubs — not in this run</p>
+        <p>· Automation ratios are targets, not measured outcomes</p>
+        <p style="margin-top: 14px;"><code>kba/sasp · ingestion · 2026-05-11</code></p>
+      </div>
+    </footer>
+
+  </div>
+</body>
+</html>
