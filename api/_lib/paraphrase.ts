@@ -87,7 +87,7 @@ ${THEMES_PROMPT_BLOCK}
 Output JSON only, no preamble or commentary:
 {"paraphrase": "...", "theme": "A|B|C|D|E|F|OTHER", "confidence": 0.0-1.0}
 
-If the paragraph is off-topic (not about mortgages, freelance finance, rates, costs, regulation, or Italian banking), return theme "OTHER".`;
+Be permissive when assigning a theme. Anything related to Italian retail finance, banking, fiscal policy, tax incentives, or applicant context maps to A-F — pick the closest fit. Reserve "OTHER" only for paragraphs that have NO connection to finance, banking, or fiscal/regulatory matters (e.g. unrelated lifestyle, sports, weather content). Use F (market context) as the broad fallback for finance-adjacent content that doesn't fit A-E.`;
 
 function buildUserMessage(original: string, retryNote?: string): string {
   const base = `Italian text to process:\n\n${original}`;
