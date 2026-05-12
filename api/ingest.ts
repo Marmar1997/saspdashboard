@@ -25,7 +25,8 @@ import {
 } from './_lib/storage';
 import { paraphraseWithLLM, VerbatimLeakError } from './_lib/paraphrase';
 
-const MAX_PARAPHRASES_PER_RUN = 12; // hard cap so a slow Claude run can't exhaust the function budget
+const MAX_PARAPHRASES_PER_RUN = 5;        // hard cap on LLM calls per run
+const TIME_BUDGET_MS = 50_000;            // bail before Vercel's 60s function timeout
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const t0 = Date.now();
@@ -47,6 +48,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     let processed = 0;
     for (const post of onTopic) {
       if (processed >= MAX_PARAPHRASES_PER_RUN) break;
+      if (Date.now() - t0 > TIME_BUDGET_MS) {
+        errors.push(`time budget exhausted after ${processed} paraphrase(s)`);
+        break;
+      }
 
       const original_hash = hashOriginal(post.text);
       if (await isDuplicate(original_hash)) continue;
