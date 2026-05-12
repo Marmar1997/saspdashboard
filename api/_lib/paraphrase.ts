@@ -17,11 +17,13 @@ import { THEMES_PROMPT_BLOCK, type ThemeId } from './themes';
 
 const MODEL = 'gpt-4o-mini';
 const MAX_RETRIES = 1;
-const VERBATIM_NGRAM = 6;  // 4 was too strict for technical Italian: common
-                            // jargon like "di credito d imposta" / "la proroga
-                            // di questa" trips it. 6 is the standard paraphrase-
-                            // copyright threshold — preserves the posture while
-                            // letting boilerplate idiom through.
+const VERBATIM_NGRAM = 8;  // Tuned against partitaiva.it: 4-gram caught common
+                            // tax jargon ("di credito d imposta"); 6-gram caught
+                            // fixed regulatory phrases ("zona economica speciale
+                            // ZES") and proper-noun enumerations ("regioni
+                            // Campania Calabria…"). 8-gram catches sentence-
+                            // level verbatim reproduction without false-flagging
+                            // unavoidable terminology. HITL remains the final gate.
 
 let _client: OpenAI | null = null;
 function client(): OpenAI {
