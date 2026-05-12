@@ -16,8 +16,12 @@ import OpenAI from 'openai';
 import { THEMES_PROMPT_BLOCK, type ThemeId } from './themes';
 
 const MODEL = 'gpt-4o-mini';
-const MAX_RETRIES = 2;
-const VERBATIM_NGRAM = 4;
+const MAX_RETRIES = 1;
+const VERBATIM_NGRAM = 6;  // 4 was too strict for technical Italian: common
+                            // jargon like "di credito d imposta" / "la proroga
+                            // di questa" trips it. 6 is the standard paraphrase-
+                            // copyright threshold — preserves the posture while
+                            // letting boilerplate idiom through.
 
 let _client: OpenAI | null = null;
 function client(): OpenAI {
