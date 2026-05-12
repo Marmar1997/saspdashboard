@@ -1,7 +1,8 @@
 // Daily crawl orchestrator. Wired to Vercel Cron via vercel.json.
 //
 // Flow:
-//   1. crawlMutuiSubforum() → raw posts
+//   1. crawlIntermediarySources() → raw paragraph posts from partitaiva.it
+//      (Finanzaonline is blocked by Cloudflare — see api/_lib/intermediary.ts)
 //   2. Cheap keyword pre-filter (quickThemeGuess) — drop OTHER
 //   3. Dedupe by original_hash
 //   4. paraphraseWithClaude() — paraphrase + theme tag + verbatim guard
@@ -12,7 +13,7 @@
 // manual smoke-testing via curl.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { crawlMutuiSubforum } from './_lib/finanzaonline';
+import { crawlIntermediarySources } from './_lib/intermediary';
 import { quickThemeGuess } from './_lib/themes';
 import {
   hashOriginal,
@@ -33,10 +34,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   let errors: string[] = [];
 
   try {
-    const crawl = await crawlMutuiSubforum();
+    const crawl = await crawlIntermediarySources();
     posts_seen = crawl.posts.length;
     if (crawl.fetch_errors > 0) {
-      errors.push(`${crawl.fetch_errors} fetch error(s)`);
+      // Surface specific error messages so silent breakage (selector drift, IP block) is debuggable.
+      errors.push(...crawl.fetch_errors_detail.slice(0, 3));
     }
 
     // Pre-filter by keywords. Drops generic "ciao" replies before we spend tokens.
@@ -58,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
           paraphrase: para.paraphrase,
           theme: para.theme,
           source_url: post.thread_url,
-          source_label: 'Finanzaonline · Mutui',
+          source_label: post.source_label,
           thread_title: post.thread_title,
           original_hash,
           original_excerpt: post.text.slice(0, 80) + (post.text.length > 80 ? '…' : ''),
