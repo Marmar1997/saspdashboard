@@ -16,14 +16,16 @@ import OpenAI from 'openai';
 import { THEMES_PROMPT_BLOCK, type ThemeId } from './themes';
 
 const MODEL = 'gpt-4o-mini';
-const MAX_RETRIES = 1;
-const VERBATIM_NGRAM = 8;  // Tuned against partitaiva.it: 4-gram caught common
-                            // tax jargon ("di credito d imposta"); 6-gram caught
-                            // fixed regulatory phrases ("zona economica speciale
-                            // ZES") and proper-noun enumerations ("regioni
-                            // Campania Calabria…"). 8-gram catches sentence-
-                            // level verbatim reproduction without false-flagging
-                            // unavoidable terminology. HITL remains the final gate.
+const MAX_RETRIES = 0;       // No retry: if first attempt leaks, skip the
+                              // candidate. Retries kept hitting the same
+                              // unavoidable phrases and burning the time budget.
+const VERBATIM_NGRAM = 12;   // True sentence-level reproduction. 4/6/8-gram
+                              // false-flagged unavoidable Italian: tax jargon
+                              // ("credito d'imposta"), proper-noun enumerations
+                              // ("Campania Calabria Puglia…"), and natural
+                              // constructions ("un piano più ampio che porti a
+                              // un…"). Methodology relies on HITL as the
+                              // structural defence anyway (§5).
 
 let _client: OpenAI | null = null;
 function client(): OpenAI {
