@@ -9,6 +9,16 @@
 //   6. localStorage merge for custom products created at runtime
 //   7. Resolvers + back-compat aliases consumed by tour-script.js
 
+// Demo mode: wipe any persisted custom orgs/products/onboarding flag on every
+// page load so each visit acts as a fresh user (onboarding modal shows, no
+// leftover products). In-session creates still live in memory until refresh.
+try {
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem('sasp_custom_products_v1');
+    localStorage.removeItem('sasp_demo_org_id');
+  }
+} catch (e) { /* ignore */ }
+
 // ───────────────────────────────────────────────────────────────────────────
 // 1. Showcase archetypes — Italian personal loan for young professionals (25–35)
 // ───────────────────────────────────────────────────────────────────────────
@@ -1052,6 +1062,58 @@ async function getFreshSignals({ limit = 12 } = {}) {
   }
 }
 
+// ───────────────────────────────────────────────────────────────────────────
+// 9. Country calibration layers
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Mirrors data/country_layers/it/trust_baseline.json. Keep in sync if the JSON
+// is regenerated from ESS11 marginals. Source: ESS11 e04.1 (DOI 10.21338/ess11e04_1),
+// fieldwork 2023-2024, IT, raw_n=2865, effective_n=2554.7, weight=pspwght.
+
+const COUNTRY_LAYERS = {
+  it: {
+    trustBaseline: {
+      meta: {
+        source: 'ESS11 e04.1',
+        doi: '10.21338/ess11e04_1',
+        fieldwork: '2023-2024',
+        rawN: 2865,
+        effectiveN: 2554.7,
+        weight: 'pspwght',
+        jsonPath: 'data/country_layers/it/trust_baseline.json',
+      },
+      scale: { min: 0, max: 10, neutralBaseline: 4.4 },
+      socialTrust: { compositeMean: 4.385 },
+      institutionalTrust: {
+        items: {
+          trstprl: 4.305, trstlgl: 5.41, trstplc: 6.537,
+          trstplt: 3.295, trstprt: 3.257, trstep: 4.519,
+        },
+        compositeMean: 4.554,
+      },
+      anchor: 4.4,
+    },
+    // Directional only. n=60 too small to drive scoring. Surfaced on the
+    // methodology disclosure + ?debug=1 panel; NOT consumed by computeTrust.
+    trustFreelanceUnder40Directional: {
+      meta: {
+        source: 'ESS11 e04.1 — under-40 freelance subset (IT)',
+        rawN: 60,
+        effectiveN: 53.0,
+        jsonPath: 'trust_marginals_it_under40_freelance.json',
+        caveat: 'n=60 is too thin to statistically distinguish from the general population on Trust or Satisfaction. All observed differences sit inside their own 95% CIs. Directional reference only — do not use as scoring input.',
+      },
+      socialTrust: { compositeMean: 4.692 },
+      institutionalTrust: {
+        items: {
+          trstprl: 4.605, trstlgl: 5.781, trstplc: 6.619,
+          trstplt: 3.258, trstprt: 3.448, trstep: 5.045,
+        },
+      },
+    },
+  },
+};
+
 window.SASP_DATA = {
   ARCHETYPES,
   PRODUCT_DEFAULTS,
@@ -1066,4 +1128,5 @@ window.SASP_DATA = {
   saveCustomProduct,
   getFreshSignals,
   SHOWCASE_PRODUCT_ID,
+  countryLayers: COUNTRY_LAYERS,
 };

@@ -349,6 +349,112 @@ function SignalsGenerationGate({ productName, onComplete }) {
   );
 }
 
+function TrustMethodology() {
+  const layer = (window.SASP_DATA && window.SASP_DATA.countryLayers && window.SASP_DATA.countryLayers.it) || null;
+  const baseline = layer && layer.trustBaseline;
+  const freelance = layer && layer.trustFreelanceUnder40Directional;
+  const [expanded, setExpanded] = useState(false);
+  if (!baseline) return null;
+
+  const debug = typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('debug') === '1';
+
+  const inst = baseline.institutionalTrust.items;
+  const tiles = [
+    ['social composite', baseline.socialTrust.compositeMean],
+    ['trstprl', inst.trstprl],
+    ['trstlgl', inst.trstlgl],
+    ['trstplc', inst.trstplc],
+    ['trstplt', inst.trstplt],
+    ['trstprt', inst.trstprt],
+    ['trstep',  inst.trstep],
+    ['anchor (neutral)', baseline.anchor],
+  ];
+
+  return (
+    <section className="rounded-2xl bg-paper-0 hairline p-5 space-y-4">
+      <div className="flex items-center gap-2 flex-wrap">
+        <h2 className="text-[15px] font-semibold text-ink-900">Trust axis methodology</h2>
+        <window.Pill tone="green" size="xs">ESS11 calibrated</window.Pill>
+        <window.Pill tone="outline" size="xs">IT Country Layer</window.Pill>
+      </div>
+      <p className="text-[12px] text-ink-700 leading-relaxed">
+        Trust scores are anchored to ESS11 Italy population marginals
+        (<span className="num">{baseline.meta.source}</span>,
+        DOI <span className="num">{baseline.meta.doi}</span>,
+        fieldwork {baseline.meta.fieldwork}, weighted with <code>{baseline.meta.weight}</code>,
+        effective n = <span className="num">{baseline.meta.effectiveN}</span>).
+        Neutral baseline = <span className="num font-semibold">{baseline.anchor}</span> on a 0–10 scale.
+      </p>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[12px]">
+        {tiles.map(([k, v]) => (
+          <div key={k} className="rounded-lg hairline p-2.5">
+            <div className="text-[11px] uppercase tracking-wider text-ink-400">{k}</div>
+            <div className="num text-ink-900 font-medium mt-0.5">{v}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="text-[12px] text-ink-700 leading-relaxed border-l-2 border-navy-700 pl-3 italic">
+        The SASP Trust axis is operationalized using the European Social Survey Round 11
+        social and institutional trust batteries — the EU's standard validated constructs.
+        The Italian general-population baseline (n≈2,865, ESS11 e04.1, fieldwork 2023–24)
+        anchors the dashboard's 0–10 trust scale. Segment-specific priors for under-40
+        freelance professionals are derived from the same instrument with appropriate
+        small-cell caveats. Mortgage-domain signal — confusion, product-specific risk
+        perception, decision archetypes — is sourced from Italian-native channels
+        (Finanzaonline, Banca d'Italia, Consap, MEF), not from ESS.
+      </div>
+
+      <div>
+        <button onClick={() => setExpanded(x => !x)}
+          className="text-[12px] text-ink-700 underline decoration-dotted hover:text-ink-900">
+          {expanded ? 'Hide' : 'Show'} under-40 freelance subset (n=60 — directional only)
+        </button>
+        {expanded && freelance && (
+          <div className="mt-2 rounded-lg hairline bg-paper-50 p-3 text-[12px] text-ink-700 space-y-2">
+            <div className="text-ink-900 font-semibold">
+              Under-40 freelance subset, IT (raw n={freelance.meta.rawN}, effective n={freelance.meta.effectiveN})
+            </div>
+            <p className="leading-relaxed">
+              The under-40 solo/small freelance cell in ESS11 IT is too thin to
+              statistically distinguish from the general population on Trust or
+              Satisfaction. Every observed difference — largest +0.53 on EU
+              Parliament trust, +0.37 on life satisfaction — sits inside its own
+              95% CI. Directional reference only; not a scoring input.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-1">
+              <div className="rounded-lg hairline bg-paper-0 p-2">
+                <div className="text-[11px] uppercase tracking-wider text-ink-400">social composite</div>
+                <div className="num text-ink-900 font-medium mt-0.5">{freelance.socialTrust.compositeMean}</div>
+              </div>
+              {Object.entries(freelance.institutionalTrust.items).map(([k, v]) => (
+                <div key={k} className="rounded-lg hairline bg-paper-0 p-2">
+                  <div className="text-[11px] uppercase tracking-wider text-ink-400">{k}</div>
+                  <div className="num text-ink-900 font-medium mt-0.5">{v}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {debug && freelance && (
+        <div className="rounded-lg border-2 border-amber-300 bg-amber-100/40 p-3 text-[12px] space-y-2">
+          <div className="flex items-center gap-2">
+            <window.Pill tone="amber" size="xs">debug=1</window.Pill>
+            <span className="text-ink-700 font-semibold">Raw freelance subset cells</span>
+          </div>
+          <pre className="text-[11px] text-ink-700 num overflow-auto leading-snug whitespace-pre-wrap">
+{JSON.stringify(freelance, null, 2)}
+          </pre>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function Sources({ data, onPrimary, onToast, needsGeneration=false, productName='', onGenerated }) {
   const [generating, setGenerating] = useState(needsGeneration);
   const [connectors, setConnectors] = useState(data.company);
@@ -501,6 +607,8 @@ function Sources({ data, onPrimary, onToast, needsGeneration=false, productName=
           </div>
         </section>
       </div>
+
+      <TrustMethodology/>
     </div>
   );
 }
