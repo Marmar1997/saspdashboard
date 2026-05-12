@@ -1,5 +1,11 @@
 // App root — wires screens together
-const { ARCHETYPES, PRODUCT_DEFAULTS, SOURCES_DATA, TENANTS_DATA } = window.SASP_DATA;
+const {
+  PRODUCT_DEFAULTS,
+  TENANTS_DATA,
+  getArchetypesFor,
+  getSourcesFor,
+  saveCustomProduct,
+} = window.SASP_DATA;
 
 function mockTime(offset = 0) {
   const total = 9 * 60 + 42 + offset;
@@ -58,7 +64,9 @@ function App() {
   const [screen, setScreen] = useState('portfolio');
   const [activeOrgId, setActiveOrgId] = useState(firstOrg.id);
   const [activeProductId, setActiveProductId] = useState(firstProduct.id);
-  const [archetype, setArchetype] = useState(ARCHETYPES[0]); // Marco
+  const [archetypes, setArchetypes] = useState(() => getArchetypesFor(firstProduct.id));
+  const [sources, setSources] = useState(() => getSourcesFor(firstProduct.id));
+  const [archetype, setArchetype] = useState(() => getArchetypesFor(firstProduct.id)[0]);
   const [product, setProduct] = useState(productStateFrom(firstProduct));
   const [mockOffset, setMockOffset] = useState(0);
   const [savedAt, setSavedAt] = useState(mockTime(0));
@@ -110,9 +118,13 @@ function App() {
   const selectTenantProduct = (orgId, productId) => {
     const nextOrg = TENANTS_DATA.find(org => org.id === orgId) || firstOrg;
     const nextProduct = nextOrg.products.find(item => item.id === productId) || nextOrg.products[0];
+    const nextArchetypes = getArchetypesFor(nextProduct.id);
     setActiveOrgId(nextOrg.id);
     setActiveProductId(nextProduct.id);
     setProduct(productStateFrom(nextProduct));
+    setArchetypes(nextArchetypes);
+    setSources(getSourcesFor(nextProduct.id));
+    setArchetype(nextArchetypes[0]);
     showToast('Financial product context switched', `${nextOrg.name} · ${nextProduct.name} is now active.`);
   };
 
@@ -125,7 +137,19 @@ function App() {
     const time = advanceMockClock(4);
     setLastGenerated(time);
     setScreen('audiences');
-    showToast('Segment set ready', `${ARCHETYPES.length} customer segments regenerated at ${time}.`);
+    showToast('Segment set ready', `${archetypes.length} customer segments regenerated at ${time}.`);
+  };
+
+  const handleCreateCustomProduct = (payload) => {
+    const { orgId, product: newProduct } = saveCustomProduct({ ...payload, orgId: payload.orgId || activeOrg.id });
+    const nextArchetypes = getArchetypesFor(newProduct.id);
+    setActiveOrgId(orgId);
+    setActiveProductId(newProduct.id);
+    setProduct(productStateFrom(newProduct));
+    setArchetypes(nextArchetypes);
+    setSources(getSourcesFor(newProduct.id));
+    setArchetype(nextArchetypes[0]);
+    showToast('Product created', `${newProduct.name} is now active with ${nextArchetypes.length} fabricated segments.`);
   };
 
   const handleSave = () => {
@@ -166,16 +190,17 @@ function App() {
               activeProductId={activeProduct.id}
               onSelectOrg={selectTenantOrg}
               onSelectProduct={selectTenantProduct}
+              onCreateProduct={handleCreateCustomProduct}
               onOpenSimulator={()=>setScreen('simulator')}
               onToast={showToast}
             />
           )}
           {screen === 'sources' && (
-            <window.Sources data={SOURCES_DATA} onPrimary={handleGenerate} onToast={showToast}/>
+            <window.Sources data={sources} onPrimary={handleGenerate} onToast={showToast}/>
           )}
           {screen === 'audiences' && (
             <window.Audiences
-              archetypes={ARCHETYPES}
+              archetypes={archetypes}
               onUse={useArchetype}
               density={density}
               setDensity={(n)=>setTweak('cardDensity', n)}
@@ -187,7 +212,7 @@ function App() {
           {screen === 'simulator' && (
             <window.Simulator
               archetype={archetype}
-              archetypes={ARCHETYPES}
+              archetypes={archetypes}
               product={product}
               setProduct={setProduct}
               onPickArchetype={setArchetype}

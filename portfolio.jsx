@@ -82,8 +82,158 @@ function CreateProductCard({ onClick }) {
   );
 }
 
-function Portfolio({ orgs=[], activeOrgId, activeProductId, onSelectOrg, onSelectProduct, onOpenSimulator, onToast }) {
+const PRODUCT_TYPES = ['Personal loan', 'Mortgage', 'Deposit', 'SME credit', 'Pension', 'Protection insurance'];
+const PRODUCT_REGIONS = ['Italy', 'Nordics', 'Spain', 'Iberia', 'DACH'];
+const FEATURE_FIELDS = [
+  { key: 'digitalOnly',      label: 'Digital-only' },
+  { key: 'advisor',          label: 'Advisor' },
+  { key: 'earlyExitWaiver',  label: 'Early-exit waiver' },
+  { key: 'flexiblePause',    label: 'Flexible pause' },
+  { key: 'insuranceBundle',  label: 'Insurance bundle' },
+  { key: 'salarySwitch',     label: 'Salary switch' },
+  { key: 'jointApplication', label: 'Joint application' },
+];
+
+function CreateProductModal({ orgName, defaultRegion, onCancel, onSubmit }) {
+  const [name, setName] = useState('');
+  const [type, setType] = useState('Personal loan');
+  const [segment, setSegment] = useState('');
+  const [region, setRegion] = useState(defaultRegion && PRODUCT_REGIONS.includes(defaultRegion) ? defaultRegion : 'Italy');
+  const [rate, setRate] = useState(5.5);
+  const [term, setTerm] = useState(48);
+  const [amount, setAmount] = useState(15000);
+  const [features, setFeatures] = useState({
+    digitalOnly: true, advisor: false, earlyExitWaiver: false,
+    flexiblePause: false, insuranceBundle: false, salarySwitch: false, jointApplication: false,
+  });
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onCancel?.(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onCancel]);
+
+  const toggleFeature = (key) => setFeatures(f => ({ ...f, [key]: !f[key] }));
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    onSubmit?.({
+      name: name.trim(),
+      type,
+      segment: segment.trim() || `${type} customers`,
+      region,
+      rate: Number(rate),
+      term: Number(term),
+      amount: Number(amount),
+      features,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-ink-900/40 backdrop-blur-sm p-4" onMouseDown={onCancel}>
+      <form
+        onSubmit={handleSubmit}
+        onMouseDown={(e)=>e.stopPropagation()}
+        className="w-full max-w-[560px] rounded-2xl bg-paper-0 shadow-lift hairline overflow-hidden">
+        <header className="px-6 pt-5 pb-4 flex items-start justify-between gap-4">
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.14em] text-ink-400 font-medium">New product · {orgName}</div>
+            <div className="text-[18px] font-semibold text-ink-900 mt-0.5 leading-tight">Spin up a product to test</div>
+            <div className="text-[12px] text-ink-500 mt-1 max-w-[42ch]">We'll fabricate a plausible audience and a source mix to match. Saved locally — clears with browser storage.</div>
+          </div>
+          <button type="button" onClick={onCancel} className="text-ink-400 hover:text-ink-900 p-1 -m-1">
+            <window.Icons.X size={14}/>
+          </button>
+        </header>
+        <div className="px-6 pb-5 space-y-4">
+          <label className="block">
+            <span className="text-[11px] uppercase tracking-[0.12em] text-ink-400 font-medium">Product name</span>
+            <input
+              autoFocus
+              type="text"
+              value={name}
+              onChange={(e)=>setName(e.target.value)}
+              placeholder="e.g. Young Doctors Mortgage"
+              className="mt-1.5 w-full rounded-md hairline bg-paper-0 px-3 py-2 text-[13px] text-ink-900 outline-none focus:ring-2 focus:ring-brand"/>
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block">
+              <span className="text-[11px] uppercase tracking-[0.12em] text-ink-400 font-medium">Type</span>
+              <select value={type} onChange={(e)=>setType(e.target.value)}
+                className="mt-1.5 w-full rounded-md hairline bg-paper-0 px-3 py-2 text-[13px] text-ink-900 outline-none focus:ring-2 focus:ring-brand">
+                {PRODUCT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-[11px] uppercase tracking-[0.12em] text-ink-400 font-medium">Region</span>
+              <select value={region} onChange={(e)=>setRegion(e.target.value)}
+                className="mt-1.5 w-full rounded-md hairline bg-paper-0 px-3 py-2 text-[13px] text-ink-900 outline-none focus:ring-2 focus:ring-brand">
+                {PRODUCT_REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </label>
+          </div>
+          <label className="block">
+            <span className="text-[11px] uppercase tracking-[0.12em] text-ink-400 font-medium">Target segment</span>
+            <input
+              type="text"
+              value={segment}
+              onChange={(e)=>setSegment(e.target.value)}
+              placeholder="e.g. Freelancers under 40"
+              className="mt-1.5 w-full rounded-md hairline bg-paper-0 px-3 py-2 text-[13px] text-ink-900 outline-none focus:ring-2 focus:ring-brand"/>
+          </label>
+          <div className="grid grid-cols-3 gap-3">
+            <label className="block">
+              <span className="text-[11px] uppercase tracking-[0.12em] text-ink-400 font-medium">Rate %</span>
+              <input type="number" step="0.05" min="0.5" max="15" value={rate}
+                onChange={(e)=>setRate(e.target.value)}
+                className="mt-1.5 w-full rounded-md hairline bg-paper-0 px-3 py-2 text-[13px] text-ink-900 num outline-none focus:ring-2 focus:ring-brand"/>
+            </label>
+            <label className="block">
+              <span className="text-[11px] uppercase tracking-[0.12em] text-ink-400 font-medium">Term · mo</span>
+              <input type="number" step="1" min="6" max="120" value={term}
+                onChange={(e)=>setTerm(e.target.value)}
+                className="mt-1.5 w-full rounded-md hairline bg-paper-0 px-3 py-2 text-[13px] text-ink-900 num outline-none focus:ring-2 focus:ring-brand"/>
+            </label>
+            <label className="block">
+              <span className="text-[11px] uppercase tracking-[0.12em] text-ink-400 font-medium">Amount · €</span>
+              <input type="number" step="500" min="500" max="1000000" value={amount}
+                onChange={(e)=>setAmount(e.target.value)}
+                className="mt-1.5 w-full rounded-md hairline bg-paper-0 px-3 py-2 text-[13px] text-ink-900 num outline-none focus:ring-2 focus:ring-brand"/>
+            </label>
+          </div>
+          <div>
+            <span className="text-[11px] uppercase tracking-[0.12em] text-ink-400 font-medium">Features</span>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {FEATURE_FIELDS.map(f => {
+                const on = !!features[f.key];
+                return (
+                  <button type="button" key={f.key} onClick={()=>toggleFeature(f.key)}
+                    className={`px-2.5 py-1 rounded-full text-[12px] hairline ${on ? 'bg-brand-surface text-navy-900' : 'bg-paper-0 text-ink-500 hover:text-ink-900'}`}>
+                    {on ? '✓ ' : ''}{f.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        <footer className="px-6 py-4 bg-paper-50 border-t border-ink-100 flex items-center justify-end gap-2">
+          <button type="button" onClick={onCancel}
+            className="px-3 py-1.5 rounded-md text-[12px] font-medium text-ink-500 hover:text-ink-900 hover:bg-paper-100">
+            Cancel
+          </button>
+          <button type="submit" disabled={!name.trim()}
+            className={`px-3.5 py-1.5 rounded-md text-[12px] font-semibold inline-flex items-center gap-1.5 ${name.trim() ? 'bg-brand text-ink-900 hover:bg-brand-emphasis' : 'bg-paper-100 text-ink-400 cursor-not-allowed'}`}>
+            <window.Icons.Plus size={12}/> Create product
+          </button>
+        </footer>
+      </form>
+    </div>
+  );
+}
+
+function Portfolio({ orgs=[], activeOrgId, activeProductId, onSelectOrg, onSelectProduct, onCreateProduct, onOpenSimulator, onToast }) {
   const [showOrgPicker, setShowOrgPicker] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
   const pickerRef = useRef(null);
 
   const activeOrg = orgs.find(org => org.id === activeOrgId) || orgs[0];
@@ -108,7 +258,11 @@ function Portfolio({ orgs=[], activeOrgId, activeProductId, onSelectOrg, onSelec
   };
 
   const createProduct = () => {
-    onToast?.('Create new product', 'Mock: would open product creation flow for ' + activeOrg.name + '.');
+    setShowCreate(true);
+  };
+  const handleSubmitProduct = (payload) => {
+    setShowCreate(false);
+    onCreateProduct?.({ ...payload, orgId: activeOrg.id });
   };
   const createOrg = () => {
     onToast?.('Create new organization', 'Mock: would open organization onboarding.');
@@ -193,6 +347,15 @@ function Portfolio({ orgs=[], activeOrgId, activeProductId, onSelectOrg, onSelec
         })}
         <CreateProductCard onClick={createProduct}/>
       </div>
+
+      {showCreate && (
+        <CreateProductModal
+          orgName={activeOrg.name}
+          defaultRegion={activeOrg.region}
+          onCancel={()=>setShowCreate(false)}
+          onSubmit={handleSubmitProduct}
+        />
+      )}
     </div>
   );
 }
