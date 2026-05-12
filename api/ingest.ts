@@ -26,7 +26,7 @@ import {
 import { paraphraseWithLLM, VerbatimLeakError } from './_lib/paraphrase';
 
 const MAX_PARAPHRASES_PER_RUN = 5;        // hard cap on LLM calls per run
-const TIME_BUDGET_MS = 50_000;            // bail before Vercel's 60s function timeout
+const TIME_BUDGET_MS = 55_000;            // bail before Vercel's 60s function timeout
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const t0 = Date.now();

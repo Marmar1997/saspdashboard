@@ -33,9 +33,9 @@ const EXCLUDE_SLUGS = new Set([
   'fisco-tasse', 'impresa', 'info-dati', 'innovazione', 'lavoro',
   'dichiarazione-pubblicita', 'editoriali',
 ]);
-const RATE_LIMIT_MS = 1000;
-const MAX_ARTICLES_PER_RUN = 6;
-const MAX_PARAGRAPHS_PER_ARTICLE = 8;
+const RATE_LIMIT_MS = 500;            // was 1000 — partitaiva.it tolerates 2 req/s fine
+const MAX_ARTICLES_PER_RUN = 3;       // was 6 — burned 30+ s of crawl budget; LLM never ran
+const MAX_PARAGRAPHS_PER_ARTICLE = 5; // was 8 — fewer candidates per article, more articles' worth of variety over time
 const REQUEST_TIMEOUT_MS = 15_000;
 const MIN_PARA_CHARS = 120;
 const MAX_PARA_CHARS = 1400;
