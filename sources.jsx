@@ -274,7 +274,83 @@ function FreshSignalsTile({ onToast }) {
   );
 }
 
-function Sources({ data, onPrimary, onToast }) {
+function SignalsGenerationGate({ productName, onComplete }) {
+  const [phase, setPhase] = useState('idle');
+  const [stepIdx, setStepIdx] = useState(0);
+  const steps = [
+    'Connecting to Reddit, LinkedIn, X & finance forums…',
+    'Paraphrasing posts (copyright-safe)…',
+    'Running native-speaker validator & indexing themes…',
+  ];
+  useEffect(() => {
+    if (phase !== 'running') return;
+    if (stepIdx >= steps.length) {
+      const done = setTimeout(() => onComplete?.(), 350);
+      return () => clearTimeout(done);
+    }
+    const t = setTimeout(() => setStepIdx(i => i + 1), 550);
+    return () => clearTimeout(t);
+  }, [phase, stepIdx]);
+
+  if (phase === 'idle') {
+    return (
+      <div className="space-y-6">
+        <window.SectionHeader
+          eyebrow="Phase 1 · Signals"
+          title="Generate social signals"
+          sub={`No signals have been collected for ${productName || 'this product'} yet. Run the pipeline to crawl public sources, paraphrase posts, and validate themes.`}
+        />
+        <div className="rounded-2xl bg-paper-0 hairline p-10 text-center">
+          <div className="mx-auto w-16 h-16 rounded-full bg-brand-surface grid place-items-center text-navy-900">
+            <window.Icons.Spark size={26}/>
+          </div>
+          <div className="text-[16px] font-semibold text-ink-900 mt-4">Your signal stream is empty</div>
+          <div className="text-[12px] text-ink-500 mt-1.5 max-w-[52ch] mx-auto leading-snug">
+            We haven't crawled any public chatter for this product yet. Generation usually takes a few seconds in mock mode — real runs go nightly at 04:00 UTC.
+          </div>
+          <button onClick={() => { setPhase('running'); setStepIdx(0); }}
+            className="mt-5 px-4 py-2 rounded-md text-[13px] font-semibold bg-brand text-ink-900 hover:bg-brand-emphasis inline-flex items-center gap-1.5">
+            <window.Icons.Spark size={14}/> Generate social signals
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <window.SectionHeader
+        eyebrow="Phase 1 · Signals"
+        title="Generating social signals…"
+        sub={`Crawling public sources for ${productName || 'this product'}. This usually takes a few seconds.`}
+      />
+      <div className="rounded-2xl bg-paper-0 hairline p-10">
+        <div className="mx-auto w-14 h-14 rounded-full bg-brand-surface grid place-items-center text-navy-900 mb-5">
+          <svg className="animate-spin" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+        </div>
+        <div className="space-y-2.5 max-w-[420px] mx-auto">
+          {steps.map((label, i) => {
+            const done = i < stepIdx;
+            const active = i === stepIdx;
+            return (
+              <div key={label} className={`flex items-center gap-2.5 text-[12px] ${done ? 'text-ink-500' : active ? 'text-ink-900 font-semibold' : 'text-ink-300'}`}>
+                <span className={`w-4 h-4 rounded-full grid place-items-center ${done ? 'bg-brand text-ink-900' : active ? 'bg-brand-surface text-navy-900 ring-2 ring-brand' : 'bg-paper-100 text-ink-400'}`}>
+                  {done ? <window.Icons.Check size={10}/> : <span className="w-1 h-1 rounded-full bg-current"/>}
+                </span>
+                <span>{label}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Sources({ data, onPrimary, onToast, needsGeneration=false, productName='', onGenerated }) {
+  const [generating, setGenerating] = useState(needsGeneration);
   const [connectors, setConnectors] = useState(data.company);
   const [totalItems, setTotalItems] = useState(12718);
   const [activity, setActivity] = useState([
@@ -282,6 +358,16 @@ function Sources({ data, onPrimary, onToast }) {
     '09:40 · Reddit stream added 38 consumer finance posts',
     '09:37 · Website crawl indexed loan and policy FAQ updates',
   ]);
+  useEffect(() => { setConnectors(data.company); }, [data]);
+
+  if (generating) {
+    return (
+      <SignalsGenerationGate
+        productName={productName}
+        onComplete={() => { setGenerating(false); onGenerated?.(); onToast?.('Social signals ready', `${productName} now has a live signal stream.`); }}
+      />
+    );
+  }
 
   const bumpCount = (id) => ({
     gdrive: '247 policy docs',

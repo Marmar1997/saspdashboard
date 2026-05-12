@@ -889,14 +889,15 @@ const CUSTOM_STORAGE_KEY = 'sasp_custom_products_v1';
 function _readCustomStore() {
   try {
     const raw = (typeof localStorage !== 'undefined') ? localStorage.getItem(CUSTOM_STORAGE_KEY) : null;
-    if (!raw) return { products: [], packs: {} };
+    if (!raw) return { products: [], packs: {}, orgs: [] };
     const parsed = JSON.parse(raw);
     return {
       products: Array.isArray(parsed.products) ? parsed.products : [],
       packs: parsed.packs && typeof parsed.packs === 'object' ? parsed.packs : {},
+      orgs: Array.isArray(parsed.orgs) ? parsed.orgs : [],
     };
   } catch (e) {
-    return { products: [], packs: {} };
+    return { products: [], packs: {}, orgs: [] };
   }
 }
 
@@ -907,9 +908,20 @@ function _writeCustomStore(store) {
   } catch (e) { /* ignore quota / privacy errors */ }
 }
 
-// Replay stored custom products on boot, before any consumer reads the lookups.
+// Replay stored custom orgs + products on boot, before any consumer reads the lookups.
 {
   const store = _readCustomStore();
+  for (const org of (store.orgs || [])) {
+    if (!org || !org.id) continue;
+    if (TENANTS_DATA.some(t => t.id === org.id)) continue;
+    TENANTS_DATA.push({
+      id: org.id,
+      name: org.name || 'My organization',
+      plan: org.plan || 'Trial',
+      region: org.region || 'Italy',
+      products: [],
+    });
+  }
   for (const entry of store.products) {
     const { orgId, product } = entry;
     if (!product || !product.id) continue;
@@ -934,6 +946,25 @@ function _writeCustomStore(store) {
       SOURCES_BY_PRODUCT[product.id] = rebuilt.sources;
     }
   }
+}
+
+// Public API for the onboarding modal. Creates an empty tenant, persists it,
+// and returns the new org so callers can switch active context to it.
+function saveCustomOrg({ name, region }) {
+  const id = `org-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+  const org = {
+    id,
+    name: (name && name.trim()) || 'My organization',
+    plan: 'Trial',
+    region: region || 'Italy',
+    products: [],
+  };
+  TENANTS_DATA.push(org);
+  const store = _readCustomStore();
+  store.orgs = store.orgs || [];
+  store.orgs.push({ id: org.id, name: org.name, plan: org.plan, region: org.region, createdAt: Date.now() });
+  _writeCustomStore(store);
+  return org;
 }
 
 // Public API for the create-product modal. Persists, mutates in-memory lookups,
@@ -1031,6 +1062,7 @@ window.SASP_DATA = {
   getArchetypesFor,
   getSourcesFor,
   fabricateProductPack,
+  saveCustomOrg,
   saveCustomProduct,
   getFreshSignals,
   SHOWCASE_PRODUCT_ID,
