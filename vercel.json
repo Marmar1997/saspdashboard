@@ -1,0 +1,25 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/ingest",
+      "schedule": "0 4 * * *"
+    }
+  ],
+  "functions": {
+    "api/ingest.ts": {
+      "maxDuration": 60
+    },
+    "api/signals.ts": {
+      "maxDuration": 10
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    }
+  ]
+}

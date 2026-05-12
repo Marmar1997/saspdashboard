@@ -1002,6 +1002,25 @@ function getSourcesFor(productId) {
 const ARCHETYPES = ARCHETYPES_BY_PRODUCT[SHOWCASE_PRODUCT_ID];
 const SOURCES_DATA = SOURCES_BY_PRODUCT[SHOWCASE_PRODUCT_ID];
 
+// ───────────────────────────────────────────────────────────────────────────
+// 8. Fresh-signals client — fetches HITL-validated paraphrases from /api/signals
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Thin fetch wrapper. Returns [] when the API is unreachable (local file://, no
+// backend yet, etc.) so the Sources screen degrades gracefully.
+
+async function getFreshSignals({ limit = 12 } = {}) {
+  try {
+    const res = await fetch(`/api/signals?status=approved&limit=${limit}`, {
+      headers: { 'Accept': 'application/json' },
+    });
+    if (!res.ok) return { signals: [], last_run: null, counts: null };
+    return await res.json();
+  } catch (e) {
+    return { signals: [], last_run: null, counts: null };
+  }
+}
+
 window.SASP_DATA = {
   ARCHETYPES,
   PRODUCT_DEFAULTS,
@@ -1013,5 +1032,6 @@ window.SASP_DATA = {
   getSourcesFor,
   fabricateProductPack,
   saveCustomProduct,
+  getFreshSignals,
   SHOWCASE_PRODUCT_ID,
 };

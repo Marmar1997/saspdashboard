@@ -163,6 +163,117 @@ function InflowIndicator({ totalItems }) {
   );
 }
 
+const FRESH_THEME_LABELS = {
+  A: 'Income volatility',
+  B: 'Tasso fisso vs variabile',
+  C: 'Garante / Consap / ISEE',
+  D: 'Hidden costs / polizze',
+  E: 'Identity language',
+  F: 'Market context',
+  OTHER: 'Other',
+};
+
+function FreshSignalsTile({ onToast }) {
+  const [signals, setSignals] = useState([]);
+  const [counts, setCounts] = useState(null);
+  const [lastRun, setLastRun] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const { getFreshSignals } = window.SASP_DATA || {};
+      if (!getFreshSignals) { setSignals([]); return; }
+      const data = await getFreshSignals({ limit: 12 });
+      setSignals(data.signals || []);
+      setCounts(data.counts || null);
+      setLastRun(data.last_run || null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleRefresh = () => {
+    load();
+    onToast?.('Fresh signals refresh', 'Pulled the latest validated paraphrases.');
+  };
+
+  const lastIngestLabel = lastRun
+    ? `${new Date(lastRun.ts).toLocaleString()} · ${lastRun.posts_added} added, ${lastRun.posts_seen} seen${lastRun.error ? ' ⚠' : ''}`
+    : 'no run yet';
+
+  return (
+    <div className="rounded-2xl bg-paper-0 hairline p-5 space-y-4">
+      <header className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-[15px] font-semibold text-ink-900">Fresh signals · Finanzaonline</h2>
+            <window.Pill tone="green" size="xs">HITL validated</window.Pill>
+            <window.Pill tone="outline" size="xs">Live pipeline</window.Pill>
+          </div>
+          <p className="text-[12px] text-ink-500 mt-1 leading-snug max-w-[60ch]">
+            Daily crawl of the Mutui sub-forum → Claude paraphrase (copyright-safe) → native-Italian validator review. Approved signals feed the KO library, not distribution shape.
+          </p>
+        </div>
+        <button onClick={handleRefresh} disabled={loading}
+          className="px-3 py-1.5 rounded-md text-[12px] font-medium hairline bg-paper-0 text-ink-700 hover:bg-paper-50 shrink-0">
+          {loading ? 'Loading…' : 'Refresh'}
+        </button>
+      </header>
+
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px] text-ink-500">
+        <span>
+          <span className="text-[11px] uppercase tracking-[0.12em] text-ink-400 font-medium">Last ingest</span>
+          <span className="num text-ink-700 ml-2">{lastIngestLabel}</span>
+        </span>
+        {counts && (
+          <span className="ml-auto num">
+            {counts.approved} approved · {counts.pending} pending · {counts.rejected} rejected
+          </span>
+        )}
+      </div>
+
+      {signals.length === 0 ? (
+        <div className="rounded-xl hairline bg-paper-50 px-4 py-6 text-center space-y-1">
+          <div className="text-[12px] font-semibold text-ink-700">No validated signals yet</div>
+          <div className="text-[11px] text-ink-500 max-w-[44ch] mx-auto">
+            The first batch appears after the daily crawl (04:00 UTC) and the validator approves. Until then, this tile sits empty by design.
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2.5">
+          {signals.map(sig => (
+            <div key={sig.id} className="rounded-xl hairline bg-paper-0 px-4 py-3">
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <window.Pill tone="green" size="xs">
+                  {sig.theme} · {FRESH_THEME_LABELS[sig.theme] || 'Other'}
+                </window.Pill>
+                <span className="text-[11px] text-ink-400 num">
+                  {new Date(sig.captured_at).toLocaleDateString()}
+                </span>
+                <a href={sig.source_url} target="_blank" rel="noopener noreferrer"
+                  className="ml-auto text-[11px] text-navy-700 hover:underline">
+                  Open original ↗
+                </a>
+              </div>
+              <p className="text-[12px] text-ink-800 leading-snug">
+                {sig.edited_paraphrase || sig.paraphrase}
+              </p>
+              {sig.thread_title && (
+                <div className="text-[11px] text-ink-400 mt-1.5 truncate">
+                  Thread: {sig.thread_title}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Sources({ data, onPrimary, onToast }) {
   const [connectors, setConnectors] = useState(data.company);
   const [totalItems, setTotalItems] = useState(12718);
@@ -208,6 +319,8 @@ function Sources({ data, onPrimary, onToast }) {
       <window.StatusStrip onPrimary={onPrimary} onToast={onToast} logItems={activity} itemCount={totalItems} sourceCount={connectors.length + 3}/>
 
       <InflowIndicator totalItems={totalItems}/>
+
+      <FreshSignalsTile onToast={onToast}/>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* LEFT — Internal data */}
