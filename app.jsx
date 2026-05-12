@@ -194,7 +194,12 @@ function App() {
       next.delete(productId);
       return next;
     });
-    setScreen('audiences');
+    // Linger on the populated Signals page so the user sees the live stream
+    // and references they just "ingested", then auto-advance to Segments.
+    setTimeout(() => {
+      setScreen(current => current === 'sources' ? 'audiences' : current);
+      showToast('Moving on to segments', 'Signals are live — now let\'s cluster them into customer segments.');
+    }, 3500);
   };
 
   const handleSegmentsGenerated = (productId) => {
